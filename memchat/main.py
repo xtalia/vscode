@@ -13,6 +13,7 @@ from bs4 import BeautifulSoup
 from oauth2client.service_account import ServiceAccountCredentials
 from telebot import types
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
+import test
 # from google.colab import drive # GC
 
 
@@ -195,7 +196,8 @@ def contact_us(message):
     bot.send_message(message.chat.id, "Here is how you can contact us: phone number, email address, or other ways.")
 
 def test_table(message): # Тестовая функция
-    bot.send_message(message.chat.id, "Тут ничего нет")
+    #bot.send_message(message.chat.id, "Тут ничего нет")
+    test.get_values_from_sheet('13KUmHtRXYbXjBE7KQ_4MFQ5VsgUYqu2heURY1y2NwiE', dir_path + '\creds2.json')
 
 def sn_cutter(message):
     if message.text and message.text[0] in "SЫ":
@@ -436,9 +438,9 @@ def handle_callback_query(call):
 
 if __name__ == '__main__': # Запуск бота
     print("Запуск бота")
-    #bot.polling(none_stop=True, interval=0)
-    try:
-        bot.polling(none_stop=True, interval=0)
-    except:
-        print("Ошибка у бота - перезапусти без эксепшена")
-        bot.polling(none_stop=True, interval=0)
+    bot.polling(none_stop=True, interval=0)
+    # try:
+    #     bot.polling(none_stop=True, interval=0)
+    # except:
+    #     print("Ошибка у бота - перезапусти без эксепшена")
+    #     bot.polling(none_stop=True, interval=0)
