@@ -16,7 +16,7 @@ from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 # from google.colab import drive # GC
 
 
-bot = telebot.TeleBot('6089036388:AAFACsFqem3-v5j5HDWWsuBglQbA1sGpER8', skip_pending=True)
+bot = telebot.TeleBot('6057005343:AAHWzzPQ-IshPv_Z5y4uPKuHWE160TqpaeM', skip_pending=True)
 
 # Кнопки и триггеры
 welcome_message = "Я умею многое\nТы можешь мне отправить название товара или артику или нажать на эти кнопки внизу:"
@@ -190,7 +190,6 @@ def process_cash_amount(message):
     except ValueError:
         bot.send_message(chat_id=message.chat.id, text="Сломался калькулятор, что-то пошло не так (Только цифры)")
         print("Калькулятор Ошибка")
-###
 
 def contact_us(message):
     bot.send_message(message.chat.id, "Here is how you can contact us: phone number, email address, or other ways.")
@@ -364,10 +363,10 @@ def calculate_denomination(message, denominations, count, denomination):
     except ValueError:
         bot.send_message(message.chat.id, "Пожалуйста, введите число.")
 
-### Конец мегакальулятора
 
 ############################################################ Основная функция ##
 
+# ------------------------------------------------------------------------------
 
 @bot.message_handler(commands=['restart'])
 def handle_restart(message):
@@ -433,7 +432,7 @@ def handle_callback_query(call):
         bot.send_message(chat_id=call.message.chat.id, text="Ошибка у парсера. Попробуй еще раз или сообщи Сергу")
         print("Ошибка парсера")
 
-# -----------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 if __name__ == '__main__': # Запуск бота
     print("Запуск бота")
