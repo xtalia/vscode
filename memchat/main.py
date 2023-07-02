@@ -4,6 +4,7 @@ import json
 import os
 import re
 import sys
+from datetime import datetime, timedelta
 
 # Third-party imports
 import gspread
@@ -46,6 +47,17 @@ TRADEIN_TRIGGERS = ["трейдин", "tradein", "nhtqlby","tn","тн","ет","n
 
 # List of triggers that activate the megacalculator function
 MEGACALC_TRIGGERS = ["мегакалькулятор", "мега", "mega", "mc", "ьс", "мк", "megacalc", "/megacalc"]
+
+WW_TRIGGERS = ["кто работает", "кто", "rnj", "/whowork"]
+
+PLACES = {
+    'У': 'Как Управляющий',
+    'М': 'Как Менеджер',
+    'РБ': 'в ТЦ Рубин',
+    'Р': 'на Рахова',
+    'К': 'на Казачьей',
+    'Ч': 'на Чернышевского'
+}
 
 # WIN Получаем путь к текущей директории скрипта
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -252,7 +264,8 @@ def handle_serial_number_cutter(message):
     bot.register_next_step_handler(message, sn_cutter)
 
 
-############################################################ Трейдин опросник ##
+
+### Трейдин опросник
 
 @bot.message_handler(func=lambda message: message.text.lower() in TRADEIN_TRIGGERS)
 def handle_tradein(message):
@@ -324,7 +337,67 @@ def handle_back_cover(message, phone_prices, model, memory, options):
     response += f"*На что повлияла цена:\n {options}\n*Если состояние неудовлетворительное,\nто уточни у сервисных менеджеров"
     bot.send_message(message.chat.id, response)
 
-### Конец опросника
+# Конец опросника
+
+### Кто работает сегодня или завтра
+@bot.message_handler(func=lambda message: message.text.lower() in WW_TRIGGERS)
+def work_message(message):
+    # define the inline keyboard markup
+    keyboard = InlineKeyboardMarkup()
+    today_button = InlineKeyboardButton(text='Сегодня', callback_data='today')
+    tomorrow_button = InlineKeyboardButton(text='Завтра', callback_data='tomorrow')
+    keyboard.row(today_button, tomorrow_button)
+
+    # send the message with the inline keyboard markup
+    bot.send_message(chat_id=message.chat.id, text='Выберите день:', reply_markup=keyboard)
+
+# define the callback query handler function
+@bot.callback_query_handler(func=lambda call: True)
+def callback_query(call):
+    if call.data == 'today':
+        day_offset = 0
+        day_text = 'Сегодня'
+    else:
+        day_offset = 1
+        day_text = 'Завтра'
+    
+    # open the Google Sheets document by URL
+    sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/13KUmHtRXYbXjBE7KQ_4MFQ5VsgUYqu2heURY1y2NwiE/edit#gid=0')
+
+    # select the worksheet by index (0-indexed)
+    worksheet = sheet.get_worksheet(0)
+
+    day = datetime.now().day + day_offset
+
+    # get values from the 1st, 2nd, and 3rd columns, starting from row 4
+    values_a = worksheet.col_values(1)[3:]
+    values_b = worksheet.col_values(1 + day)[3:]
+    values_c = worksheet.col_values(2 + day)[3:]
+
+    # get the current date and time
+    now = datetime.now()
+
+    # print the values from the 1st and 2nd columns
+    a_values = []
+    for a, b in zip(values_a, values_b):
+        if a is not None:
+            if a.startswith('!'):
+                a_values.append(f"\n🏢 В городе: {a[1:]}{b}\n")
+            elif b is not None and b != '':
+                a = PLACES.get(a, a)
+                b = PLACES.get(b, b)
+                a_values.append(f"👤 {a}: {b}")
+
+    # format the output
+    if a_values:
+        text = f"{day_text} ({(now + timedelta(days=day_offset)).strftime('%d.%m.%Y')}) работают:\n" + '\n'.join(a_values)
+    else:
+        text = f"{day_text} ({(now + timedelta(days=day_offset)).strftime('%d.%m.%Y')}) никто не работает"
+
+    # send the message
+    bot.send_message(chat_id=call.message.chat.id, text=text)
+
+# Конец
 
 # Считывает купюры (Такая красота получилась после рефакторинга)
 @bot.message_handler(func=lambda message: message.text.lower() in MEGACALC_TRIGGERS)
