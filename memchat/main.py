@@ -1,12 +1,13 @@
 # Экспериментальная версия
 # Если в гугл колабе запускаешь, то сначала запусти код выше
+# Импорты родных
 import json
 import os
 import re
 import sys
 from datetime import datetime, timedelta
 
-# Third-party imports
+# Импорты заморских
 import gspread
 import requests
 import telebot
@@ -28,35 +29,39 @@ keyboard.add(
     telebot.types.KeyboardButton("Трейдин"),
     telebot.types.KeyboardButton("SN"),
     telebot.types.KeyboardButton("Мегакалькулятор"),
+    telebot.types.KeyboardButton("Кто работает")
 )
 
-# List of triggers that activate the update function
+# Список для триггеров кнопки обновления кнопок
 UPDATE_TRIGGERS = ["обновить", "update", "j,yjdbnm", "помощь"]
 
-# List of triggers that activate the test function
+# Список для триггеров тестовой функции
 TEST_TRIGGERS = ["test", "тест","/test"]
 
-# List of triggers that activate the calculator function
+# Список для триггера калькулятора цен по карте, в рассрочку и пр
 CALCULATE_TRIGGERS = ["калькулятор", "calculator", "rfkmrekznjh", "calc","кальк","сфдс","кл","cl","сд","rk", "/calculator"]
 
-# List of triggers that activate the serial number function
+# Список для триггера обрезчика серийника
 SN_TRIGGERS = ["сн", "sn", "серийник","ын", "ыт","cy","/sn"]
 
-# List of triggers that activate the trade-in function
+# Список для триггера трейдин-опросника
 TRADEIN_TRIGGERS = ["трейдин", "tradein", "nhtqlby","tn","тн","ет","ny", "/tradein"]
 
-# List of triggers that activate the megacalculator function
+# Список для триггера счетчика крупных купюр
 MEGACALC_TRIGGERS = ["мегакалькулятор", "мега", "mega", "mc", "ьс", "мк", "megacalc", "/megacalc"]
 
+# Список для триггера вызова списка работающих сегодня или завтра
 WW_TRIGGERS = ["кто работает", "кто", "rnj", "/whowork"]
 
-PLACES = {
-    'У': 'Как Управляющий',
-    'М': 'Как Менеджер',
+# Список для триггера вызова списка работающих сегодня или завтра
+WW_PLACES = {
+    'У': 'как Управляющий',
+    'М': 'как Менеджер',
     'РБ': 'в ТЦ Рубин',
     'Р': 'на Рахова',
     'К': 'на Казачьей',
-    'Ч': 'на Чернышевского'
+    'Ч': 'на Чернышевского',
+    'И': 'как SMM'
 }
 
 # WIN Получаем путь к текущей директории скрипта
@@ -70,6 +75,7 @@ with open(os.path.join(dir_path, 'creds.json'), 'r') as f:
 # with open(creds_file) as f:
 #     cred_json = json.load(f)
 
+# Для авторизации к гугл-таблицам
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/spreadsheets']
 creds = ServiceAccountCredentials.from_json_keyfile_dict(cred_json, scope)
 client = gspread.authorize(creds)
@@ -173,22 +179,22 @@ user_data = {}
 ###
 
 # -----------------------------------------------------------------------------
-# Функции
-# -----------------------------------------------------------------------------
 
-################### Калькулятор по карте или в рассрочку по таксе AppSaratov ##
+# Функции
+
+## Калькулятор по карте или в рассрочку по таксе AppSaratov
 def process_cash_amount(message): 
     try:
         print("Кто-то запросил Калькулятор")
         cash = float(message.text.strip())
 
-        # Calculate prices and discounts
+        # Расчет по карте, рассрочку, кредиту, кешбеку
         card_price = round(cash * 1.03 / 10) * 10 - 10
         rassrochka_price = round(cash * 1.08 / 10) * 10 - 10
         credit_price = round(cash * 1.03 / 10) * 10 - 10
         cashback_amount = round(cash * 0.005)
 
-        # Generate output message
+        # Оформление сообщения
         output = "Стоимость: {:.0f} рублей с учетом скидки за оплату наличными\n".format(cash)
         output += "* по карте = {:.0f} рублей\n\n".format(card_price)
         output += "** в рассрочку = {:.0f} рублей (от {:.0f} руб. на 6 месяцев)\n".format(rassrochka_price, rassrochka_price / 6)
@@ -197,20 +203,22 @@ def process_cash_amount(message):
         output += "** оформить в рассрочку или кредит возможно в нашем магазине по ул. Чернышевского 89 и в ТЦ Рубин (Высокая 12А)\n\n"
         output += "Кешбек = {:.0f} внутренними рублями\n (через 2 недели, если закажете самостоятельно на сайте)".format(cashback_amount)
 
-        # Send output message to Telegram chat
+        # Вывод пользователю
         bot.send_message(chat_id=message.chat.id, text=output)
         print("Калькулятор ОК")
     except ValueError:
         bot.send_message(chat_id=message.chat.id, text="Сломался калькулятор, что-то пошло не так (Только цифры)")
         print("Калькулятор Ошибка")
 
+## Даже не знаю зачем, но пусть будет
 def contact_us(message):
-    bot.send_message(message.chat.id, "Here is how you can contact us: phone number, email address, or other ways.")
+    bot.send_message(message.chat.id, "Все вопросы Сергею из Балаково")
 
-def test_table(message): # Тестовая функция
-    #bot.send_message(message.chat.id, "Тут ничего нет")
-    test.get_values_from_sheet('13KUmHtRXYbXjBE7KQ_4MFQ5VsgUYqu2heURY1y2NwiE', dir_path + '\creds2.json')
+## Тестовая функция для обкатки
+def test_table(message): 
+    bot.send_message(message.chat.id, "Тут ничего нет")
 
+## Обрезчик серийника
 def sn_cutter(message):
     if message.text and message.text[0] in "SЫ":
         sn = message.text[1:]
@@ -224,10 +232,10 @@ def sn_cutter(message):
 # ms_sn_seeker - поиск товара по серийнику или чтобы давал линк
 # ms_antibot - чтобы парсил цену с сайта и мс
 # def memchat_zakaz - если цена изменилась и нужно отправить запрос складу
-# hr_memes - выводить список работников на сегодняшний день
 
+# -----------------------------------------------------------------------------
+# Запуск бота с кнопками
 
-###################################################### Запуск бота с кнопками ##
 @bot.message_handler(commands=['start'])
 def start_command(message): # Приветственное сообщение
     bot.send_message(message.chat.id, welcome_message)
@@ -263,9 +271,7 @@ def handle_serial_number_cutter(message):
     # регистрируем следующий обработчик для ответа пользователя
     bot.register_next_step_handler(message, sn_cutter)
 
-
-
-### Трейдин опросник
+## Трейдин опросник
 
 @bot.message_handler(func=lambda message: message.text.lower() in TRADEIN_TRIGGERS)
 def handle_tradein(message):
@@ -337,9 +343,9 @@ def handle_back_cover(message, phone_prices, model, memory, options):
     response += f"*На что повлияла цена:\n {options}\n*Если состояние неудовлетворительное,\nто уточни у сервисных менеджеров"
     bot.send_message(message.chat.id, response)
 
-# Конец опросника
+## Конец опросника
 
-### Кто работает сегодня или завтра
+## Кто работает сегодня или завтра
 @bot.message_handler(func=lambda message: message.text.lower() in WW_TRIGGERS)
 def work_message(message):
     # define the inline keyboard markup
@@ -349,7 +355,7 @@ def work_message(message):
     keyboard.row(today_button, tomorrow_button)
 
     # send the message with the inline keyboard markup
-    bot.send_message(chat_id=message.chat.id, text='Выберите день:', reply_markup=keyboard)
+    bot.send_message(chat_id=message.chat.id, text='Хочешь узнать, кто работает?\nВыберите день:', reply_markup=keyboard)
 
 # define the callback query handler function
 @bot.callback_query_handler(func=lambda call: True)
@@ -372,7 +378,6 @@ def callback_query(call):
     # get values from the 1st, 2nd, and 3rd columns, starting from row 4
     values_a = worksheet.col_values(1)[3:]
     values_b = worksheet.col_values(1 + day)[3:]
-    values_c = worksheet.col_values(2 + day)[3:]
 
     # get the current date and time
     now = datetime.now()
@@ -384,8 +389,8 @@ def callback_query(call):
             if a.startswith('!'):
                 a_values.append(f"\n🏢 В городе: {a[1:]}{b}\n")
             elif b is not None and b != '':
-                a = PLACES.get(a, a)
-                b = PLACES.get(b, b)
+                a = WW_PLACES.get(a, a)
+                b = WW_PLACES.get(b, b)
                 a_values.append(f"👤 {a}: {b}")
 
     # format the output
@@ -397,9 +402,9 @@ def callback_query(call):
     # send the message
     bot.send_message(chat_id=call.message.chat.id, text=text)
 
-# Конец
+## Конец
 
-# Считывает купюры (Такая красота получилась после рефакторинга)
+## Считывает купюры (Такая красота получилась после рефакторинга)
 @bot.message_handler(func=lambda message: message.text.lower() in MEGACALC_TRIGGERS)
 def start_megacalculator(message):
     # Define a dictionary of denominations and their corresponding messages
@@ -438,10 +443,9 @@ def calculate_denomination(message, denominations, count, denomination):
     except ValueError:
         bot.send_message(message.chat.id, "Пожалуйста, введите число.")
 
-
-############################################################ Основная функция ##
-
 # ------------------------------------------------------------------------------
+
+# Обработчики команд
 
 @bot.message_handler(commands=['restart'])
 def handle_restart(message):
