@@ -375,7 +375,7 @@ def callback_query(call):
 
     day = datetime.now().day + day_offset
 
-    # get values from the 1st, 2nd, and 3rd columns, starting from row 4 и еще убирает лишние пробелы, если оставили по ошибке
+    # Получаем данные из 1 столбца со списком сотрудников и городов (которые помечены символом !) и из столбца B-AF соответсвующий запросу (сегодня или завтра)
     values_a = [value.strip() for value in worksheet.col_values(1)[3:]]
     values_b = [value.strip() for value in worksheet.col_values(1 + day)[3:]]
 
