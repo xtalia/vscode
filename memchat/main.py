@@ -29,31 +29,28 @@ keyboard.add(
     telebot.types.KeyboardButton("Трейдин"),
     telebot.types.KeyboardButton("SN"),
     telebot.types.KeyboardButton("Мегакалькулятор"),
-    telebot.types.KeyboardButton("Кто работает")
+    telebot.types.KeyboardButton("Кто работает"),
+    telebot.types.KeyboardButton("Курс доллара")
 )
 
-# Список для триггеров кнопки обновления кнопок
-UPDATE_TRIGGERS = ["обновить", "update", "j,yjdbnm", "помощь"]
+# Список для триггеров 
+UPDATE_TRIGGERS = ["обновить", "update", "j,yjdbnm", "помощь"] # обновления кнопок
 
-# Список для триггеров тестовой функции
-TEST_TRIGGERS = ["test", "тест","/test"]
+TEST_TRIGGERS = ["test", "тест","/test"] # тестовой функции
 
-# Список для триггера калькулятора цен по карте, в рассрочку и пр
-CALCULATE_TRIGGERS = ["калькулятор", "calculator", "rfkmrekznjh", "calc","кальк","сфдс","кл","cl","сд","rk", "/calculator"]
+CALCULATE_TRIGGERS = ["калькулятор", "calculator", "rfkmrekznjh", "calc","кальк","сфдс","кл","cl","сд","rk", "/calculator"] # калькулятора цен по карте, в рассрочку и пр
 
-# Список для триггера обрезчика серийника
-SN_TRIGGERS = ["сн", "sn", "серийник","ын", "ыт","cy","/sn"]
+SN_TRIGGERS = ["сн", "sn", "серийник","ын", "ыт","cy","/sn"] # обрезчика серийника
 
-# Список для триггера трейдин-опросника
-TRADEIN_TRIGGERS = ["трейдин", "tradein", "nhtqlby","tn","тн","ет","ny", "/tradein"]
+TRADEIN_TRIGGERS = ["трейдин", "tradein", "nhtqlby","tn","тн","ет","ny", "/tradein"] # трейдин-опросника
 
-# Список для триггера счетчика крупных купюр
-MEGACALC_TRIGGERS = ["мегакалькулятор", "мега", "mega", "mc", "ьс", "мк", "megacalc", "/megacalc"]
+MEGACALC_TRIGGERS = ["мегакалькулятор", "мега", "mega", "mc", "ьс", "мк", "megacalc", "/megacalc"] # счетчика крупных купюр
 
-# Список для триггера вызова списка работающих сегодня или завтра
-WW_TRIGGERS = ["кто работает", "кто", "rnj", "/whowork"]
+WW_TRIGGERS = ["кто работает", "кто", "rnj", "/whowork"] # вызова списка работающих сегодня или завтра
 
-# Список для триггера вызова списка работающих сегодня или завтра
+USD_RATE_COMMANDS = ['курс доллара', 'курс', 'kurs', 'rehc', '/usdrub']
+
+# Словарь значений статуса работников или места работы
 WW_PLACES = {
     'У': 'как Управляющий',
     'М': 'как Менеджер',
@@ -182,6 +179,15 @@ user_data = {}
 
 # Функции
 
+def get_usd_rate():
+    url = 'https://www.cbr.ru/scripts/XML_daily.asp'
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, 'xml')
+    valute = soup.find('CharCode', text='USD').find_parent('Valute')
+    nominal = int(valute.Nominal.string)
+    value = float(valute.Value.string.replace(',', '.'))
+    return value / nominal
+
 ## Калькулятор по карте или в рассрочку по таксе AppSaratov
 def process_cash_amount(message): 
     try:
@@ -231,7 +237,6 @@ def sn_cutter(message):
 # ms_invoker - создание черновика заказа + отгрузки + ПКО/Вхплатежа через бота (без проводки)
 # ms_sn_seeker - поиск товара по серийнику или чтобы давал линк
 # ms_antibot - чтобы парсил цену с сайта и мс
-# def memchat_zakaz - если цена изменилась и нужно отправить запрос складу
 
 # -----------------------------------------------------------------------------
 # Запуск бота с кнопками
@@ -442,6 +447,12 @@ def calculate_denomination(message, denominations, count, denomination):
             bot.send_message(message.chat.id, message_text)
     except ValueError:
         bot.send_message(message.chat.id, "Пожалуйста, введите число.")
+
+@bot.message_handler(func=lambda message: message.text.lower() in USD_RATE_COMMANDS)
+def handle_usd_rate(message):
+    usd_rate = get_usd_rate()
+    text = f'Текущий курс доллара: {usd_rate:.2f} руб.'
+    bot.reply_to(message, text)
 
 # ------------------------------------------------------------------------------
 
