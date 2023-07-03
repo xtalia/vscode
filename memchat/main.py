@@ -375,9 +375,9 @@ def callback_query(call):
 
     day = datetime.now().day + day_offset
 
-    # get values from the 1st, 2nd, and 3rd columns, starting from row 4
-    values_a = worksheet.col_values(1)[3:]
-    values_b = worksheet.col_values(1 + day)[3:]
+    # get values from the 1st, 2nd, and 3rd columns, starting from row 4 и еще убирает лишние пробелы, если оставили по ошибке
+    values_a = [value.strip() for value in worksheet.col_values(1)[3:]]
+    values_b = [value.strip() for value in worksheet.col_values(1 + day)[3:]]
 
     # get the current date and time
     now = datetime.now()
