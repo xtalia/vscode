@@ -181,14 +181,12 @@ user_data = {}
 
 # Функции
 
-def sergdebug(text):
-    try:
-        if DEBUG_LVL:
-            bot.send_message(ERROR_CHAT_ID, f'DEBUG MESSAGE:\n{text}')
-        else:
-            print(text)
-    except Exception as e:
-        print(f'Ошибка в sergdebug:\n{e}')
+
+def send_debug_message(text):
+    if DEBUG_LVL:
+        bot.send_message(ERROR_CHAT_ID, f'DEBUG MESSAGE:\n{text}')
+    else:
+        print(text)
 
 def handle_exception(e):
     tb_str = traceback.format_exception(type(e), e, e.__traceback__)
@@ -197,11 +195,13 @@ def handle_exception(e):
     bot.send_message(ERROR_CHAT_ID, text)
 
 def main():
-    try:
-        sergdebug(DEBUG_LVL)
-        bot.polling(none_stop=True, interval=0) 
-    except Exception as e:
-        handle_exception(e)
+    send_debug_message(DEBUG_LVL)
+    while True:
+        try:
+            bot.polling(none_stop=True, interval=0)
+        except Exception as e:
+            handle_exception(e)
+        time.sleep(5)
 
 def get_usd_rate(date):
     url = f'https://www.cbr.ru/scripts/XML_daily_eng.asp?date_req={date.strftime("%d/%m/%Y")}'
@@ -215,7 +215,7 @@ def get_usd_rate(date):
 ## Калькулятор по карте или в рассрочку по таксе AppSaratov
 def process_cash_amount(message): 
     try:
-        sergdebug(f"{message.from_user.id} запросил Калькулятор")
+        send_debug_message(f"{message.from_user.id} запросил Калькулятор")
         cash = float(message.text.strip())
 
         # Расчет по карте, рассрочку, кредиту, кешбеку
@@ -235,10 +235,10 @@ def process_cash_amount(message):
 
         # Вывод пользователю
         bot.send_message(chat_id=message.chat.id, text=output)
-        sergdebug("Калькулятор ОК")
+        send_debug_message("Калькулятор ОК")
     except ValueError:
         bot.send_message(chat_id=message.chat.id, text="Сломался калькулятор, что-то пошло не так (Только цифры)")
-        sergdebug("Калькулятор Ошибка")
+        send_debug_message("Калькулятор Ошибка")
 
 ## Даже не знаю зачем, но пусть будет
 def contact_us(message):
@@ -246,14 +246,15 @@ def contact_us(message):
 
 ## Тестовая функция для обкатки
 def test_table(message):
+    a = 1 / 0
     global DEBUG_LVL 
-    sergdebug(f"Переключаем на внутреннюю отладку")
+    send_debug_message(f"Переключаем на внутреннюю отладку")
     if DEBUG_LVL:
         DEBUG_LVL = False
     else:
         DEBUG_LVL = True
-        sergdebug("Переключаем на внешнюю отладку")
-        sergdebug(f"DEBUG_LVL: {DEBUG_LVL}")
+        send_debug_message("Переключаем на внешнюю отладку")
+        send_debug_message(f"DEBUG_LVL: {DEBUG_LVL}")
         
 
 ## Обрезчик серийника
@@ -312,7 +313,7 @@ def handle_serial_number_cutter(message):
 
 @bot.message_handler(func=lambda message: message.text.lower() in TRADEIN_TRIGGERS)
 def handle_tradein(message):
-    sergdebug(f"{message.from_user.id} запросил Трейдин")
+    send_debug_message(f"{message.from_user.id} запросил Трейдин")
     models = phone_prices.models.keys()
     model_buttons = types.InlineKeyboardMarkup(row_width=2)
     for model in models:
@@ -380,7 +381,7 @@ def handle_back_cover(message, phone_prices, model, memory, options):
     response += f"* Цена в Трейдин: до {total_price:.0f} рублей\n"
     response += f"*На что повлияла цена:\n {options}\n*Если состояние неудовлетворительное,\nто уточни у сервисных менеджеров"
     bot.send_message(message.chat.id, response)
-    sergdebug(f"{message.from_user.id} Трейдин ОК")
+    send_debug_message(f"{message.from_user.id} Трейдин ОК")
 
 ## Конец опросника
 
@@ -433,14 +434,14 @@ def callback_query(call):
 
     # Send the message
     bot.send_message(chat_id=call.message.chat.id, text=text)
-    sergdebug(f"Запрос работников успешен")    
+    send_debug_message(f"Запрос работников успешен")    
 
 ## Конец
 
 ## Считывает купюры (Такая красота получилась после рефакторинга)
 @bot.message_handler(func=lambda message: message.text.lower() in MEGACALC_TRIGGERS)
 def start_megacalculator(message):
-    sergdebug(f"{message.from_user.id} запросил мегакалькулятор")
+    send_debug_message(f"{message.from_user.id} запросил мегакалькулятор")
     # Define a dictionary of denominations and their corresponding messages
     denominations = {
         500: "Сколько купюр номиналом 500?",
@@ -476,11 +477,11 @@ def calculate_denomination(message, denominations, count, denomination):
             bot.send_message(message.chat.id, message_text)
     except ValueError:
         bot.send_message(message.chat.id, "Пожалуйста, введите число.")
-    sergdebug(f"Мегакалькулятор ОК")
+    send_debug_message(f"Мегакалькулятор ОК")
 
 @bot.message_handler(func=lambda message: message.text.lower() in USD_RATE_COMMANDS)
 def handle_usd_rate(message):
-    sergdebug(f"{message.from_user.id} запросил Курс Доллара")
+    send_debug_message(f"{message.from_user.id} запросил Курс Доллара")
     today = datetime.today()
     yesterday = today - timedelta(days=1)
     day_before_yesterday = today - timedelta(days=2)
@@ -512,7 +513,7 @@ def handle_usd_rate(message):
 
     text = f'💵 Сегодня: {usd_rate_today:.2f}\n💵 {yesterday_str}: {usd_rate_yesterday:.2f} ({arrow_emoji_today_yesterday} {abs(price_diff_today_yesterday):.2f})\n💵 {day_before_yesterday_str}: {usd_rate_day_before_yesterday:.2f} ({arrow_emoji_yesterday_day_before_yesterday} {abs(price_diff_yesterday_day_before_yesterday):.2f})'
     bot.reply_to(message, text)
-    sergdebug(f"Курс доллара ОК")
+    send_debug_message(f"Курс доллара ОК")
 
 # ------------------------------------------------------------------------------
 
@@ -533,9 +534,9 @@ def handle_text_message(message):
                               InlineKeyboardButton("Воронеж", callback_data='Воронеж')],
                              [InlineKeyboardButton("Липецк", callback_data='Липецк')]
                          ]))
-        sergdebug(f"{message.from_user.id} запросил антибота")
+        send_debug_message(f"{message.from_user.id} запросил антибота")
     except Exception as e:
-        sergdebug(e)
+        send_debug_message(e)
         bot.send_message(chat_id=message.chat.id, text="Ошибка. Попробуйте еще раз.")
 
 @bot.callback_query_handler(func=lambda call: call.data in ['Саратов', 'Воронеж','Липецк'])
@@ -551,7 +552,7 @@ def handle_callback_query(call):
         response = requests.get(url)
         soup = BeautifulSoup(response.text, "html.parser")
         products = soup.find_all("div", class_="catalog-section-item-content")
-        sergdebug("Антибот выполняет запрос")
+        send_debug_message("Антибот выполняет запрос")
 
         if products:
             for product in products:
@@ -570,11 +571,11 @@ def handle_callback_query(call):
                 bot.send_message(chat_id=call.message.chat.id, text=message_body)
         else:
             bot.send_message(chat_id=call.message.chat.id, text="Не найдено - попробуй еще раз")
-        sergdebug("Антибот ОК")
+        send_debug_message("Антибот ОК")
     except Exception as e:
-        sergdebug(e)
+        send_debug_message(e)
         bot.send_message(chat_id=call.message.chat.id, text="Ошибка у парсера. Попробуй еще раз или сообщи Сергу")
-        sergdebug("Ошибка парсера")
+        send_debug_message("Ошибка парсера")
 
 # ------------------------------------------------------------------------------
 
