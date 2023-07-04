@@ -246,7 +246,6 @@ def contact_us(message):
 
 ## Тестовая функция для обкатки
 def test_table(message):
-    a = 1 / 0
     global DEBUG_LVL 
     send_debug_message(f"Переключаем на внутреннюю отладку")
     if DEBUG_LVL:
