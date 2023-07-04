@@ -448,15 +448,6 @@ def handle_back_cover(message, phone_prices, model, memory, options):
 ## Кто работает сегодня или завтра
 
 @bot.message_handler(func=lambda message: message.text.lower() in WW_TRIGGERS)
-def handle_message(message):
-    work_message(bot, client, message)
-
-# define the callback query handler function
-@bot.callback_query_handler(func=lambda call: True)
-def handle_callback_query(call):
-    callback_query(bot, client, call)
-
-""" @bot.message_handler(func=lambda message: message.text.lower() in WW_TRIGGERS)
 def work_message(message):
     # define the inline keyboard markup
     # sergdebug(f"{message.from_user.id} запросил список работников")
@@ -512,7 +503,7 @@ def callback_query(call):
 
     # send the message
     bot.send_message(chat_id=call.message.chat.id, text=text)
-    # sergdebug(f"Запрос работников успешен") """
+    sergdebug(f"Запрос работников успешен")
 
 ## Конец
 
