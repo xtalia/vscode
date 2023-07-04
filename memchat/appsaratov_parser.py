@@ -1,10 +1,9 @@
-from . import user_data
-from . import send_debug_message
-from bs4 import BeautifulSoup
 import requests
-from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
+from bs4 import BeautifulSoup
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from main import send_debug_message
 
-def handle_text_message(bot, message):
+def handle_text_message(bot, user_data, message):
     try:
         user_data[message.chat.id] = {"product_name": message.text}
         bot.send_message(chat_id=message.chat.id, text="Выберите город из списка:",
@@ -18,7 +17,7 @@ def handle_text_message(bot, message):
         send_debug_message(e)
         bot.send_message(chat_id=message.chat.id, text="Ошибка. Попробуйте еще раз.")
 
-def handle_callback_query(bot, call):
+def handle_callback_query(bot, user_data, call):
     try:
         cities = {'Саратов': 'https://appsaratov.ru/goods/?q=',
                   'Воронеж': 'https://appvoronezh.ru/goods/?q=',

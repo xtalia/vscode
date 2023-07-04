@@ -8,8 +8,8 @@ import sys
 import traceback
 import time
 from datetime import datetime, timedelta
+
 from sn_cutter import sn_cutter
-from work_message import work_message, callback_query
 
 # Импорты заморских
 import gspread
@@ -575,13 +575,17 @@ def handle_callback_query(call):
         send_debug_message(e)
         bot.send_message(chat_id=call.message.chat.id, text="Ошибка у парсера. Попробуй еще раз или сообщи Сергу")
         send_debug_message("Ошибка парсера")
+        
+
+# @bot.message_handler(content_types=['text'])
+# def message_handler(message):
+#     handle_text_message(bot, user_data, message)
+
+# @bot.callback_query_handler(func=lambda call: call.data in ['Саратов', 'Воронеж','Липецк'])
+# def callback_query_handler(call):
+#     handle_callback_query(bot, user_data, call)
 
 # ------------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    while True:
-        try:
-            main()
-        except Exception as e:
-            handle_exception(e)
-        time.sleep(5)
+    main()
