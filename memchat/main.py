@@ -404,12 +404,12 @@ def work_message(message):
     bot.send_message(chat_id=message.chat.id, text='Хочешь узнать, кто работает?\nВыберите день:', reply_markup=keyboard)
 
 # define the callback query handler function
-@bot.callback_query_handler(func=lambda call: True)
+@bot.callback_query_handler(func=lambda call: call.data in ['today', 'tomorrow'])
 def callback_query(call):
     if call.data == 'today':
         day_offset = 0
         day_text = 'Сегодня'
-    else:
+    elif call.data == 'tomorrow':
         day_offset = 1
         day_text = 'Завтра'
     
@@ -557,7 +557,7 @@ def ask_city(message):
         sergdebug(e)
         bot.send_message(chat_id=message.chat.id, text="Ошибка. Попробуйте еще раз.")
 
-@bot.callback_query_handler(func=lambda call: True)
+@bot.callback_query_handler(func=lambda call: call.data in ['Саратов', 'Воронеж','Липецк'])
 def handle_callback_query(call):
     try:
         if call.data == 'Саратов':
