@@ -94,30 +94,11 @@ class PhonePrices:
         self.sheet_url = sheet_url
         self.client = client
         self.sheet_name = "Для заполнения iPhone"
-        self.data = None
-        self.headers = None
-        self.model_index = None
-        self.memory_index = None
-        self.price_index = None
-        self.screen_index = None
-        self.battery_index = None
-        self.device_only_index = None
-        self.device_box_index = None
-        self.back_cover_index = None
 
         # Import data from Google Sheets
-        self._import_data()
-
-        # Get models and their memory options
-        self.models = self._get_models()
-
-    def _import_data(self):
-        # Access the Google Sheets API to retrieve data
-        sheet = self.client.open_by_url(self.sheet_url).worksheet(self.sheet_name)
-        self.data = sheet.get_all_values()
+        self.data = self._import_data()
 
         # Get column indices for relevant fields
-        self.headers = [header.strip() for header in self.data[0]]
         self.model_index = self.headers.index("Модель")
         self.memory_index = self.headers.index("Память")
         self.price_index = self.headers.index("Идеальная цена")
@@ -127,6 +108,22 @@ class PhonePrices:
         self.device_box_index = self.headers.index("устройство+коробка")
         self.back_cover_index = self.headers.index("Замена задней крышки")
 
+        # Get models and their memory options
+        self.models = self._get_models()
+
+    def _import_data(self):
+        # Open the Google Sheets document by URL
+        sheet = self.client.open_by_url(self.sheet_url).worksheet(self.sheet_name)
+
+        # Get all values from the sheet
+        data = sheet.get_all_values()
+
+        # Strip whitespace from headers
+        self.headers = [header.strip() for header in data[0]]
+
+        # Return the data
+        return data
+
     def _get_models(self):
         models = {}
         # Loop through all data rows except for the header row
@@ -134,10 +131,9 @@ class PhonePrices:
             model = row[self.model_index]
             memory = row[self.memory_index]
             # If the model hasn't been added to the dictionary yet, add it with its first memory option
-            if model not in models:
-                models[model] = [memory]
+            models.setdefault(model, [memory])
             # Otherwise, add the memory option to the existing model's list of options
-            elif memory not in models[model]:
+            if memory not in models[model]:
                 models[model].append(memory)
         return models
 
@@ -145,6 +141,7 @@ class PhonePrices:
         # Check if the model exists in the data
         if model not in self.models:
             raise ValueError(f"Модель '{model}' не найдена")
+
         # Return the list of memory options for the given model
         return self.models[model]
 
@@ -160,17 +157,15 @@ class PhonePrices:
 
                 # Calculate the total price of the phone with the additional options
                 total_price = price
+                option_indices = {
+                    "Замена экрана": self.screen_index,
+                    "Замена аккумулятора": self.battery_index,
+                    "Только устройство": self.device_only_index,
+                    "устройство+коробка": self.device_box_index,
+                    "Замена задней крышки": self.back_cover_index
+                }
                 for option in options:
-                    if option == "Замена экрана":
-                        total_price += float(row[self.screen_index])
-                    elif option == "Замена аккумулятора":
-                        total_price += float(row[self.battery_index])
-                    elif option == "Только устройство":
-                        total_price += float(row[self.device_only_index])
-                    elif option == "устройство+коробка":
-                        total_price += float(row[self.device_box_index])
-                    elif option == "Замена задней крышки":
-                        total_price += float(row[self.back_cover_index])
+                    total_price += float(row[option_indices[option]])
                 return total_price
 
         # If no matching row is found, return None
@@ -393,61 +388,52 @@ def handle_back_cover(message, phone_prices, model, memory, options):
 
 @bot.message_handler(func=lambda message: message.text.lower() in WW_TRIGGERS)
 def work_message(message):
-    # define the inline keyboard markup
-    # sergdebug(f"{message.from_user.id} запросил список работников")
-    keyboard = InlineKeyboardMarkup()
-    today_button = InlineKeyboardButton(text='Сегодня', callback_data='today')
-    tomorrow_button = InlineKeyboardButton(text='Завтра', callback_data='tomorrow')
-    keyboard.row(today_button, tomorrow_button)
+    # Define the inline keyboard markup
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton(text='Сегодня', callback_data='today'),
+         InlineKeyboardButton(text='Завтра', callback_data='tomorrow')]
+    ])
 
-    # send the message with the inline keyboard markup
+    # Send the message with the inline keyboard markup
     bot.send_message(chat_id=message.chat.id, text='Хочешь узнать, кто работает?\nВыберите день:', reply_markup=keyboard)
 
-# define the callback query handler function
 @bot.callback_query_handler(func=lambda call: call.data in ['today', 'tomorrow'])
 def callback_query(call):
-    if call.data == 'today':
-        day_offset = 0
-        day_text = 'Сегодня'
-    elif call.data == 'tomorrow':
-        day_offset = 1
-        day_text = 'Завтра'
-    
-    # open the Google Sheets document by URL
+    # Define the day offset and text based on the callback data
+    day_offset = 0 if call.data == 'today' else 1
+    day_text = 'Сегодня' if day_offset == 0 else 'Завтра'
+
+    # Open the Google Sheets document by URL
     sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/13KUmHtRXYbXjBE7KQ_4MFQ5VsgUYqu2heURY1y2NwiE/edit#gid=0')
 
-    # select the worksheet by index (0-indexed)
+    # Select the worksheet by index (0-indexed)
     worksheet = sheet.get_worksheet(0)
 
+    # Calculate the day value
     day = datetime.now().day + day_offset
 
-    # Получаем данные из 1 столбца со списком сотрудников и городов (которые помечены символом !) и из столбца B-AF соответсвующий запросу (сегодня или завтра)
-    values_a = [value.strip() for value in worksheet.col_values(1)[3:]]
-    values_b = [value.strip() for value in worksheet.col_values(1 + day)[3:]]
+    # Get the values from the columns
+    values_a = worksheet.col_values(1)[3:]
+    values_b = worksheet.col_values(1 + day)[3:]
 
-    # get the current date and time
-    now = datetime.now()
-
-    # print the values from the 1st and 2nd columns
-    a_values = []
+    # Generate the output text
+    employee_info = []
     for a, b in zip(values_a, values_b):
-        if a is not None:
-            if a.startswith('!'):
-                a_values.append(f"\n🏢 В городе: {a[1:]}{b}\n")
-            elif b is not None and b != '':
-                a = WW_PLACES.get(a, a)
-                b = WW_PLACES.get(b, b)
-                a_values.append(f"👤 {a}: {b}")
+        if a and a.startswith('!'):
+            employee_info.append(f"\n🏢 В городе: {a[1:]}{b}\n")
+        elif b and b != '':
+            a = WW_PLACES.get(a, a)
+            b = WW_PLACES.get(b, b)
+            employee_info.append(f"👤 {a}: {b}")
 
-    # format the output
-    if a_values:
-        text = f"{day_text} ({(now + timedelta(days=day_offset)).strftime('%d.%m.%Y')}) работают:\n" + '\n'.join(a_values)
+    if employee_info:
+        text = f"{day_text} ({(datetime.now() + timedelta(days=day_offset)).strftime('%d.%m.%Y')}) работают:\n" + '\n'.join(employee_info)
     else:
-        text = f"{day_text} ({(now + timedelta(days=day_offset)).strftime('%d.%m.%Y')}) никто не работает"
+        text = f"{day_text} ({(datetime.now() + timedelta(days=day_offset)).strftime('%d.%m.%Y')}) никто не работает"
 
-    # send the message
+    # Send the message
     bot.send_message(chat_id=call.message.chat.id, text=text)
-    sergdebug(f"Запрос работников успешен")
+    sergdebug(f"Запрос работников успешен")    
 
 ## Конец
 
@@ -539,20 +525,15 @@ def handle_restart(message):
 
 @bot.message_handler(content_types=['text'])
 def handle_text_message(message):
-    ask_city(message)
-    
-def ask_city(message):
-    sergdebug(f"{message.from_user.id} запросил антибота")
     try:
         user_data[message.chat.id] = {"product_name": message.text}
-        text = "Выберите город из списка:"
-        keyboard = [
-            [InlineKeyboardButton("Саратов", callback_data='Саратов'),
-             InlineKeyboardButton("Воронеж", callback_data='Воронеж')],
-            [InlineKeyboardButton("Липецк", callback_data='Липецк')]
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        bot.send_message(chat_id=message.chat.id, text=text, reply_markup=reply_markup)
+        bot.send_message(chat_id=message.chat.id, text="Выберите город из списка:",
+                         reply_markup=InlineKeyboardMarkup([
+                             [InlineKeyboardButton("Саратов", callback_data='Саратов'),
+                              InlineKeyboardButton("Воронеж", callback_data='Воронеж')],
+                             [InlineKeyboardButton("Липецк", callback_data='Липецк')]
+                         ]))
+        sergdebug(f"{message.from_user.id} запросил антибота")
     except Exception as e:
         sergdebug(e)
         bot.send_message(chat_id=message.chat.id, text="Ошибка. Попробуйте еще раз.")
@@ -560,15 +541,13 @@ def ask_city(message):
 @bot.callback_query_handler(func=lambda call: call.data in ['Саратов', 'Воронеж','Липецк'])
 def handle_callback_query(call):
     try:
-        if call.data == 'Саратов':
-            city = "https://appsaratov.ru/goods/?q="
-        elif call.data == 'Воронеж':
-            city = "https://appvoronezh.ru/goods/?q="
-        elif call.data == 'Липецк':
-            city = "https://applipetsk.ru/goods/?q="
+        cities = {'Саратов': 'https://appsaratov.ru/goods/?q=',
+                  'Воронеж': 'https://appvoronezh.ru/goods/?q=',
+                  'Липецк': 'https://applipetsk.ru/goods/?q='}
+
         bot.answer_callback_query(callback_query_id=call.id)
         product_name = user_data[call.message.chat.id]["product_name"]
-        url = city + product_name
+        url = cities[call.data] + product_name
         response = requests.get(url)
         soup = BeautifulSoup(response.text, "html.parser")
         products = soup.find_all("div", class_="catalog-section-item-content")
