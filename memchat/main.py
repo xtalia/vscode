@@ -8,6 +8,8 @@ import sys
 import traceback
 import time
 from datetime import datetime, timedelta
+from sn_cutter import sn_cutter
+from work_message import work_message, callback_query
 
 # Импорты заморских
 import gspread
@@ -17,7 +19,6 @@ from bs4 import BeautifulSoup
 from oauth2client.service_account import ServiceAccountCredentials
 from telebot import types
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
-import test
 # from google.colab import drive # GC
 
 
@@ -216,6 +217,62 @@ def get_usd_rate(date):
     value = float(valute.Value.string.replace(',', '.'))
     return value / nominal
 
+def ask_city(message):
+    sergdebug(f"{message.from_user.id} запросил антибота")
+    try:
+        user_data[message.chat.id] = {"product_name": message.text}
+        text = "Выберите город из списка:"
+        keyboard = [
+            [InlineKeyboardButton("Саратов", callback_data='Саратов'),
+             InlineKeyboardButton("Воронеж", callback_data='Воронеж')],
+            [InlineKeyboardButton("Липецк", callback_data='Липецк')]
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        bot.send_message(chat_id=message.chat.id, text=text, reply_markup=reply_markup)
+    except Exception as e:
+        sergdebug(e)
+        bot.send_message(chat_id=message.chat.id, text="Ошибка. Попробуйте еще раз.")
+
+@bot.callback_query_handler(func=lambda call: True)
+def handle_callback_query(call):
+    try:
+        if call.data == 'Саратов':
+            city = "https://appsaratov.ru/goods/?q="
+        elif call.data == 'Воронеж':
+            city = "https://appvoronezh.ru/goods/?q="
+        elif call.data == 'Липецк':
+            city = "https://applipetsk.ru/goods/?q="
+        bot.answer_callback_query(callback_query_id=call.id)
+        product_name = user_data[call.message.chat.id]["product_name"]
+        url = city + product_name
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text, "html.parser")
+        products = soup.find_all("div", class_="catalog-section-item-content")
+        sergdebug("Антибот выполняет запрос")
+
+        if products:
+            for product in products:
+                name_element = product.find("a", class_="catalog-section-item-name-wrapper intec-cl-text-hover")
+                name = name_element.text.strip() if name_element else "Без имени (мс)"
+
+                availability_element = product.find("div", class_="catalog-section-item-quantity")
+                availability = availability_element.text.strip() if availability_element else "Статус неизвестен"
+
+                price_element = product.find("span", attrs={"data-role": "item.price.discount"})
+                price = price_element.text.strip() if price_element else "Цена неизвестна (мс)"
+
+                message_body = f"{name}\n{availability}\n{price}\n"
+                message_body += f"Не проходим*\nАктуально {call.data}? Есть у нас. Когда привезете? Если под заказ - без предоплаты сможем? Клиент в магазине\n"
+
+                bot.send_message(chat_id=call.message.chat.id, text=message_body)
+        else:
+            bot.send_message(chat_id=call.message.chat.id, text="Не найдено - попробуй еще раз")
+        sergdebug("Антибот ОК")
+    except Exception as e:
+        sergdebug(e)
+        bot.send_message(chat_id=call.message.chat.id, text="Ошибка у парсера. Попробуй еще раз или сообщи Сергу")
+        sergdebug("Ошибка парсера")
+
 ## Калькулятор по карте или в рассрочку по таксе AppSaratov
 def process_cash_amount(message): 
     try:
@@ -261,12 +318,12 @@ def test_table(message):
         
 
 ## Обрезчик серийника
-def sn_cutter(message):
-    if message.text and message.text[0] in "SЫ":
-        sn = message.text[1:]
-        bot.send_message(message.chat.id, sn)
-    else:
-        bot.send_message(message.chat.id, f"Это точно серийный номер? ({message.text})")
+# def sn_cutter(message):
+#     if message.text and message.text[0] in "SЫ":
+#         sn = message.text[1:]
+#         bot.send_message(message.chat.id, sn)
+#     else:
+#         bot.send_message(message.chat.id, f"Это точно серийный номер? ({message.text})")
 
 # В мечтах:
 # def memchat_zakaz - если цена изменилась и нужно отправить запрос складу
@@ -310,7 +367,7 @@ def calculate_prices(message): # Запуск калькулятора
 def handle_serial_number_cutter(message):
     bot.send_message(message.chat.id, "Введите серийный номер для обрезки:")
     # регистрируем следующий обработчик для ответа пользователя
-    bot.register_next_step_handler(message, sn_cutter)
+    bot.register_next_step_handler(message, lambda msg: sn_cutter(msg, bot))
 
 ## Трейдин опросник
 
@@ -389,10 +446,20 @@ def handle_back_cover(message, phone_prices, model, memory, options):
 ## Конец опросника
 
 ## Кто работает сегодня или завтра
+
 @bot.message_handler(func=lambda message: message.text.lower() in WW_TRIGGERS)
+def handle_message(message):
+    work_message(bot, client, message)
+
+# define the callback query handler function
+@bot.callback_query_handler(func=lambda call: True)
+def handle_callback_query(call):
+    callback_query(bot, client, call)
+
+""" @bot.message_handler(func=lambda message: message.text.lower() in WW_TRIGGERS)
 def work_message(message):
     # define the inline keyboard markup
-    sergdebug(f"{message.from_user.id} запросил список работников")
+    # sergdebug(f"{message.from_user.id} запросил список работников")
     keyboard = InlineKeyboardMarkup()
     today_button = InlineKeyboardButton(text='Сегодня', callback_data='today')
     tomorrow_button = InlineKeyboardButton(text='Завтра', callback_data='tomorrow')
@@ -445,7 +512,7 @@ def callback_query(call):
 
     # send the message
     bot.send_message(chat_id=call.message.chat.id, text=text)
-    sergdebug(f"Запрос работников успешен")
+    # sergdebug(f"Запрос работников успешен") """
 
 ## Конец
 
@@ -538,62 +605,6 @@ def handle_restart(message):
 @bot.message_handler(content_types=['text'])
 def handle_text_message(message):
     ask_city(message)
-
-def ask_city(message):
-    sergdebug(f"{message.from_user.id} запросил антибота")
-    try:
-        user_data[message.chat.id] = {"product_name": message.text}
-        text = "Выберите город из списка:"
-        keyboard = [
-            [InlineKeyboardButton("Саратов", callback_data='Саратов'),
-             InlineKeyboardButton("Воронеж", callback_data='Воронеж')],
-            [InlineKeyboardButton("Липецк", callback_data='Липецк')]
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        bot.send_message(chat_id=message.chat.id, text=text, reply_markup=reply_markup)
-    except Exception as e:
-        sergdebug(e)
-        bot.send_message(chat_id=message.chat.id, text="Ошибка. Попробуйте еще раз.")
-
-@bot.callback_query_handler(func=lambda call: True)
-def handle_callback_query(call):
-    try:
-        if call.data == 'Саратов':
-            city = "https://appsaratov.ru/goods/?q="
-        elif call.data == 'Воронеж':
-            city = "https://appvoronezh.ru/goods/?q="
-        elif call.data == 'Липецк':
-            city = "https://applipetsk.ru/goods/?q="
-        bot.answer_callback_query(callback_query_id=call.id)
-        product_name = user_data[call.message.chat.id]["product_name"]
-        url = city + product_name
-        response = requests.get(url)
-        soup = BeautifulSoup(response.text, "html.parser")
-        products = soup.find_all("div", class_="catalog-section-item-content")
-        sergdebug("Антибот выполняет запрос")
-
-        if products:
-            for product in products:
-                name_element = product.find("a", class_="catalog-section-item-name-wrapper intec-cl-text-hover")
-                name = name_element.text.strip() if name_element else "Без имени (мс)"
-
-                availability_element = product.find("div", class_="catalog-section-item-quantity")
-                availability = availability_element.text.strip() if availability_element else "Статус неизвестен"
-
-                price_element = product.find("span", attrs={"data-role": "item.price.discount"})
-                price = price_element.text.strip() if price_element else "Цена неизвестна (мс)"
-
-                message_body = f"{name}\n{availability}\n{price}\n"
-                message_body += f"Не проходим*\nАктуально {call.data}? Есть у нас. Когда привезете? Если под заказ - без предоплаты сможем? Клиент в магазине\n"
-
-                bot.send_message(chat_id=call.message.chat.id, text=message_body)
-        else:
-            bot.send_message(chat_id=call.message.chat.id, text="Не найдено - попробуй еще раз")
-        sergdebug("Антибот ОК")
-    except Exception as e:
-        sergdebug(e)
-        bot.send_message(chat_id=call.message.chat.id, text="Ошибка у парсера. Попробуй еще раз или сообщи Сергу")
-        sergdebug("Ошибка парсера")
 
 # ------------------------------------------------------------------------------
 
