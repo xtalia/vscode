@@ -5,6 +5,8 @@ import json
 import os
 import re
 import sys
+import traceback
+import time
 from datetime import datetime, timedelta
 
 # Импорты заморских
@@ -49,6 +51,8 @@ MEGACALC_TRIGGERS = ["мегакалькулятор", "мега", "mega", "mc",
 WW_TRIGGERS = ["кто работает", "кто", "rnj", "/whowork"] # вызова списка работающих сегодня или завтра
 
 USD_RATE_COMMANDS = ['курс доллара', 'курс', 'kurs', 'rehc', '/usdrub']
+
+ERROR_CHAT_ID = '184944023'
 
 # Словарь значений статуса работников или места работы
 WW_PLACES = {
@@ -178,6 +182,18 @@ user_data = {}
 # -----------------------------------------------------------------------------
 
 # Функции
+
+def handle_exception(e):
+    tb_str = traceback.format_exception(type(e), e, e.__traceback__)
+    tb_str = ''.join(tb_str)
+    text = f'Error occurred:\n{tb_str}'
+    bot.send_message(ERROR_CHAT_ID, text)
+
+def main():
+    try:
+        bot.polling(none_stop=True, interval=0)
+    except Exception as e:
+        handle_exception(e)
 
 def get_usd_rate(date):
     url = f'https://www.cbr.ru/scripts/XML_daily_eng.asp?date_req={date.strftime("%d/%m/%Y")}'
@@ -552,11 +568,14 @@ def handle_callback_query(call):
 
 # ------------------------------------------------------------------------------
 
-if __name__ == '__main__': # Запуск бота
-    print("Запуск бота")
-    bot.polling(none_stop=True, interval=0)
-    # try:
-    #     bot.polling(none_stop=True, interval=0)
-    # except:
-    #     print("Ошибка у бота - перезапусти без эксепшена")
-    #     bot.polling(none_stop=True, interval=0)
+if __name__ == '__main__':
+    istest = 0
+    if istest == 1:
+        bot.polling(none_stop=True, interval=0)
+    else:
+        while True:
+            try:
+                main()
+            except Exception as e:
+                handle_exception(e)
+            time.sleep(5)
