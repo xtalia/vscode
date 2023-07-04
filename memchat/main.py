@@ -189,6 +189,8 @@ def sergdebug(text):
     try:
         if DEBUG_LVL:
             bot.send_message(ERROR_CHAT_ID, f'DEBUG MESSAGE:\n{text}')
+        else:
+            print(text)
     except Exception as e:
         print(f'Ошибка в sergdebug:\n{e}')
 
@@ -217,7 +219,7 @@ def get_usd_rate(date):
 ## Калькулятор по карте или в рассрочку по таксе AppSaratov
 def process_cash_amount(message): 
     try:
-        print("Кто-то запросил Калькулятор")
+        sergdebug("Кто-то запросил Калькулятор")
         cash = float(message.text.strip())
 
         # Расчет по карте, рассрочку, кредиту, кешбеку
@@ -237,10 +239,10 @@ def process_cash_amount(message):
 
         # Вывод пользователю
         bot.send_message(chat_id=message.chat.id, text=output)
-        print("Калькулятор ОК")
+        sergdebug("Калькулятор ОК")
     except ValueError:
         bot.send_message(chat_id=message.chat.id, text="Сломался калькулятор, что-то пошло не так (Только цифры)")
-        print("Калькулятор Ошибка")
+        sergdebug("Калькулятор Ошибка")
 
 ## Даже не знаю зачем, но пусть будет
 def contact_us(message):
@@ -541,7 +543,7 @@ def ask_city(message):
         reply_markup = InlineKeyboardMarkup(keyboard)
         bot.send_message(chat_id=message.chat.id, text=text, reply_markup=reply_markup)
     except Exception as e:
-        print(e)
+        sergdebug(e)
         bot.send_message(chat_id=message.chat.id, text="Ошибка. Попробуйте еще раз.")
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -559,7 +561,7 @@ def handle_callback_query(call):
         response = requests.get(url)
         soup = BeautifulSoup(response.text, "html.parser")
         products = soup.find_all("div", class_="catalog-section-item-content")
-        print("Антибот выполняет запрос")
+        sergdebug("Антибот выполняет запрос")
 
         if products:
             for product in products:
@@ -578,11 +580,11 @@ def handle_callback_query(call):
                 bot.send_message(chat_id=call.message.chat.id, text=message_body)
         else:
             bot.send_message(chat_id=call.message.chat.id, text="Не найдено - попробуй еще раз")
-        print("Антибот ОК")
+        sergdebug("Антибот ОК")
     except Exception as e:
-        print(e)
+        sergdebug(e)
         bot.send_message(chat_id=call.message.chat.id, text="Ошибка у парсера. Попробуй еще раз или сообщи Сергу")
-        print("Ошибка парсера")
+        sergdebug("Ошибка парсера")
 
 # ------------------------------------------------------------------------------
 
