@@ -22,6 +22,9 @@ import test
 
 
 bot = telebot.TeleBot('6057005343:AAHWzzPQ-IshPv_Z5y4uPKuHWE160TqpaeM', skip_pending=True)
+ERROR_CHAT_ID = '184944023' # Кому присылать сообщения об ошибке?
+DEBUG_LVL = False
+
 
 # Кнопки и триггеры
 welcome_message = "Я умею многое\nТы можешь мне отправить название товара или артику или нажать на эти кнопки внизу:"
@@ -52,8 +55,6 @@ WW_TRIGGERS = ["кто работает", "кто", "rnj", "/whowork"] # выз�
 
 USD_RATE_COMMANDS = ['курс доллара', 'курс', 'kurs', 'rehc', '/usdrub']
 
-ERROR_CHAT_ID = '184944023'
-
 # Словарь значений статуса работников или места работы
 WW_PLACES = {
     'У': 'как Управляющий',
@@ -80,6 +81,7 @@ with open(os.path.join(dir_path, 'creds.json'), 'r') as f:
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/spreadsheets']
 creds = ServiceAccountCredentials.from_json_keyfile_dict(cred_json, scope)
 client = gspread.authorize(creds)
+
 
 # -----------------------------------------------------------------------------
 
@@ -183,6 +185,13 @@ user_data = {}
 
 # Функции
 
+def sergdebug(text):
+    try:
+        if DEBUG_LVL:
+            bot.send_message(ERROR_CHAT_ID, f'DEBUG MESSAGE:\n{text}')
+    except Exception as e:
+        print(f'Ошибка в sergdebug:\n{e}')
+
 def handle_exception(e):
     tb_str = traceback.format_exception(type(e), e, e.__traceback__)
     tb_str = ''.join(tb_str)
@@ -191,7 +200,7 @@ def handle_exception(e):
 
 def main():
     try:
-        bot.polling(none_stop=True, interval=0)
+        bot.polling(none_stop=True, interval=0) 
     except Exception as e:
         handle_exception(e)
 
@@ -237,8 +246,16 @@ def contact_us(message):
     bot.send_message(message.chat.id, "Все вопросы Сергею из Балаково")
 
 ## Тестовая функция для обкатки
-def test_table(message): 
-    bot.send_message(message.chat.id, "Тут ничего нет")
+def test_table(message):
+    global DEBUG_LVL 
+    sergdebug(f"Выключаем DEBUG")
+    if DEBUG_LVL:
+        DEBUG_LVL = False
+    else:
+        DEBUG_LVL = True
+        sergdebug("Дебаггинг включен")
+        sergdebug(f"DEBUG_LVL: {DEBUG_LVL}")
+        
 
 ## Обрезчик серийника
 def sn_cutter(message):
@@ -569,8 +586,7 @@ def handle_callback_query(call):
 # ------------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    istest = 0
-    if istest == 1:
+    if DEBUG_LVL == True:
         bot.polling(none_stop=True, interval=0)
     else:
         while True:
