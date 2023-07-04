@@ -200,6 +200,7 @@ def handle_exception(e):
 
 def main():
     try:
+        sergdebug(DEBUG_LVL)
         bot.polling(none_stop=True, interval=0) 
     except Exception as e:
         handle_exception(e)
@@ -586,12 +587,9 @@ def handle_callback_query(call):
 # ------------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    if DEBUG_LVL == True:
-        bot.polling(none_stop=True, interval=0)
-    else:
-        while True:
-            try:
-                main()
-            except Exception as e:
-                handle_exception(e)
-            time.sleep(5)
+    while True:
+        try:
+            main()
+        except Exception as e:
+            handle_exception(e)
+        time.sleep(5)
