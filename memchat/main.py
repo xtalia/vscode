@@ -219,7 +219,7 @@ def get_usd_rate(date):
 ## Калькулятор по карте или в рассрочку по таксе AppSaratov
 def process_cash_amount(message): 
     try:
-        sergdebug("Кто-то запросил Калькулятор")
+        sergdebug(f"{message.from_user.id} запросил Калькулятор")
         cash = float(message.text.strip())
 
         # Расчет по карте, рассрочку, кредиту, кешбеку
@@ -251,12 +251,12 @@ def contact_us(message):
 ## Тестовая функция для обкатки
 def test_table(message):
     global DEBUG_LVL 
-    sergdebug(f"Выключаем DEBUG")
+    sergdebug(f"Переключаем на внутреннюю отладку")
     if DEBUG_LVL:
         DEBUG_LVL = False
     else:
         DEBUG_LVL = True
-        sergdebug("Дебаггинг включен")
+        sergdebug("Переключаем на внешнюю отладку")
         sergdebug(f"DEBUG_LVL: {DEBUG_LVL}")
         
 
@@ -316,6 +316,7 @@ def handle_serial_number_cutter(message):
 
 @bot.message_handler(func=lambda message: message.text.lower() in TRADEIN_TRIGGERS)
 def handle_tradein(message):
+    sergdebug(f"{message.from_user.id} запросил Трейдин")
     models = phone_prices.models.keys()
     model_buttons = types.InlineKeyboardMarkup(row_width=2)
     for model in models:
@@ -383,6 +384,7 @@ def handle_back_cover(message, phone_prices, model, memory, options):
     response += f"* Цена в Трейдин: до {total_price:.0f} рублей\n"
     response += f"*На что повлияла цена:\n {options}\n*Если состояние неудовлетворительное,\nто уточни у сервисных менеджеров"
     bot.send_message(message.chat.id, response)
+    sergdebug(f"{message.from_user.id} Трейдин ОК")
 
 ## Конец опросника
 
@@ -390,6 +392,7 @@ def handle_back_cover(message, phone_prices, model, memory, options):
 @bot.message_handler(func=lambda message: message.text.lower() in WW_TRIGGERS)
 def work_message(message):
     # define the inline keyboard markup
+    sergdebug(f"{message.from_user.id} запросил список работников")
     keyboard = InlineKeyboardMarkup()
     today_button = InlineKeyboardButton(text='Сегодня', callback_data='today')
     tomorrow_button = InlineKeyboardButton(text='Завтра', callback_data='tomorrow')
@@ -442,12 +445,14 @@ def callback_query(call):
 
     # send the message
     bot.send_message(chat_id=call.message.chat.id, text=text)
+    sergdebug(f"Запрос работников успешен")
 
 ## Конец
 
 ## Считывает купюры (Такая красота получилась после рефакторинга)
 @bot.message_handler(func=lambda message: message.text.lower() in MEGACALC_TRIGGERS)
 def start_megacalculator(message):
+    sergdebug(f"{message.from_user.id} запросил мегакалькулятор")
     # Define a dictionary of denominations and their corresponding messages
     denominations = {
         500: "Сколько купюр номиналом 500?",
@@ -483,9 +488,11 @@ def calculate_denomination(message, denominations, count, denomination):
             bot.send_message(message.chat.id, message_text)
     except ValueError:
         bot.send_message(message.chat.id, "Пожалуйста, введите число.")
+    sergdebug(f"Мегакалькулятор ОК")
 
 @bot.message_handler(func=lambda message: message.text.lower() in USD_RATE_COMMANDS)
 def handle_usd_rate(message):
+    sergdebug(f"{message.from_user.id} запросил Курс Доллара")
     today = datetime.today()
     yesterday = today - timedelta(days=1)
     day_before_yesterday = today - timedelta(days=2)
@@ -517,6 +524,7 @@ def handle_usd_rate(message):
 
     text = f'💵 Сегодня: {usd_rate_today:.2f}\n💵 {yesterday_str}: {usd_rate_yesterday:.2f} ({arrow_emoji_today_yesterday} {abs(price_diff_today_yesterday):.2f})\n💵 {day_before_yesterday_str}: {usd_rate_day_before_yesterday:.2f} ({arrow_emoji_yesterday_day_before_yesterday} {abs(price_diff_yesterday_day_before_yesterday):.2f})'
     bot.reply_to(message, text)
+    sergdebug(f"Курс доллара ОК")
 
 # ------------------------------------------------------------------------------
 
@@ -532,6 +540,7 @@ def handle_text_message(message):
     ask_city(message)
 
 def ask_city(message):
+    sergdebug(f"{message.from_user.id} запросил антибота")
     try:
         user_data[message.chat.id] = {"product_name": message.text}
         text = "Выберите город из списка:"
