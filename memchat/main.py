@@ -13,6 +13,7 @@ from appsaratov_parser import asp_text_message, asp_callback_query
 from usd_rate import handle_usd_rate
 import megacalculator
 import who_work
+import phone_prices
 
 # Импорты заморских
 import gspread
@@ -72,99 +73,9 @@ scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/au
 creds = ServiceAccountCredentials.from_json_keyfile_dict(cred_json, scope)
 client = gspread.authorize(creds)
 
-
-# -----------------------------------------------------------------------------
-
-# Класс, который вытаскивает данные из таблицы трейдина и потом выдает результат по запросу
-
-class PhonePrices:
-    def __init__(self, sheet_url, client):
-        # Initialize instance variables
-        self.sheet_url = sheet_url
-        self.client = client
-        self.sheet_name = "Для заполнения iPhone"
-
-        # Import data from Google Sheets
-        self.data = self._import_data()
-
-        # Get column indices for relevant fields
-        self.model_index = self.headers.index("Модель")
-        self.memory_index = self.headers.index("Память")
-        self.price_index = self.headers.index("Идеальная цена")
-        self.screen_index = self.headers.index("Замена экрана")
-        self.battery_index = self.headers.index("Замена аккумулятора")
-        self.device_only_index = self.headers.index("Только устройство")
-        self.device_box_index = self.headers.index("устройство+коробка")
-        self.back_cover_index = self.headers.index("Замена задней крышки")
-
-        # Get models and their memory options
-        self.models = self._get_models()
-
-    def _import_data(self):
-        # Open the Google Sheets document by URL
-        sheet = self.client.open_by_url(self.sheet_url).worksheet(self.sheet_name)
-
-        # Get all values from the sheet
-        data = sheet.get_all_values()
-
-        # Strip whitespace from headers
-        self.headers = [header.strip() for header in data[0]]
-
-        # Return the data
-        return data
-
-    def _get_models(self):
-        models = {}
-        # Loop through all data rows except for the header row
-        for row in self.data[1:]:
-            model = row[self.model_index]
-            memory = row[self.memory_index]
-            # If the model hasn't been added to the dictionary yet, add it with its first memory option
-            models.setdefault(model, [memory])
-            # Otherwise, add the memory option to the existing model's list of options
-            if memory not in models[model]:
-                models[model].append(memory)
-        return models
-
-    def get_memory_options(self, model):
-        # Check if the model exists in the data
-        if model not in self.models:
-            raise ValueError(f"Модель '{model}' не найдена")
-
-        # Return the list of memory options for the given model
-        return self.models[model]
-
-    def get_price(self, model, memory, options=None):
-        # Loop through all data rows except for the header row
-        for row in self.data[1:]:
-            # Check if the row corresponds to the given model and memory
-            if row[self.model_index] == model and row[self.memory_index] == memory:
-                # Calculate the base price of the phone without any additional options
-                price = float(row[self.price_index])
-                if options is None:
-                    return price
-
-                # Calculate the total price of the phone with the additional options
-                total_price = price
-                option_indices = {
-                    "Замена экрана": self.screen_index,
-                    "Замена аккумулятора": self.battery_index,
-                    "Только устройство": self.device_only_index,
-                    "устройство+коробка": self.device_box_index,
-                    "Замена задней крышки": self.back_cover_index
-                }
-                for option in options:
-                    total_price += float(row[option_indices[option]])
-                return total_price
-
-        # If no matching row is found, return None
-        return None
-
-# вызов данных у класса
-sheet_url = "https://docs.google.com/spreadsheets/d/1ccfJRBEUib2eO58xhnGAu6T_VbfMCtVtTqRASZdqPn8/edit#gid=1724589221"
-phone_prices = PhonePrices(sheet_url, client)
 user_data = {}
-###
+sheet_url = "https://docs.google.com/spreadsheets/d/1ccfJRBEUib2eO58xhnGAu6T_VbfMCtVtTqRASZdqPn8/edit#gid=1724589221"
+phone_prices_obj = phone_prices.PhonePrices(sheet_url ,client)
 
 # -----------------------------------------------------------------------------
 
@@ -235,15 +146,6 @@ def test_table(message):
         # send_debug_message("Переключаем на внешнюю отладку")
         # send_debug_message(f"DEBUG_LVL: {DEBUG_LVL}")
         
-
-## Обрезчик серийника
-# def sn_cutter(message):
-#     if message.text and message.text[0] in "SЫ":
-#         sn = message.text[1:]
-#         bot.send_message(message.chat.id, sn)
-#     else:
-#         bot.send_message(message.chat.id, f"Это точно серийный номер? ({message.text})")
-
 # В мечтах:
 # def memchat_zakaz - если цена изменилась и нужно отправить запрос складу
 # ms_invoker - создание черновика заказа + отгрузки + ПКО/Вхплатежа через бота (без проводки)
@@ -292,77 +194,16 @@ def handle_serial_number_cutter(message):
 
 @bot.message_handler(func=lambda message: message.text.lower() in TRADEIN_TRIGGERS)
 def handle_tradein(message):
-    # send_debug_message(f"{message.from_user.id} запросил Трейдин")
-    models = phone_prices.models.keys()
-    model_buttons = types.InlineKeyboardMarkup(row_width=2)
-    for model in models:
-        button = types.InlineKeyboardButton(text=model, callback_data=f"model:{model}")
-        model_buttons.add(button)
-    bot.send_message(message.chat.id, "Выберите модель:", reply_markup=model_buttons)
+    phone_prices_obj.handle_tradein(bot, message)
 
 @bot.callback_query_handler(func=lambda call: "model:" in call.data)
 def handle_model_callback(call):
-    model = call.data.split(":")[1]
-    memory_options = phone_prices.get_memory_options(model)
-    if not memory_options:
-        bot.send_message(call.message.chat.id, f"Для модели '{model}' не найдено вариантов памяти")
-        return
-    memory_buttons = types.InlineKeyboardMarkup(row_width=2)
-    for memory in memory_options:
-        button = types.InlineKeyboardButton(text=memory, callback_data=f"memory:{memory}")
-        memory_buttons.add(button)
-    bot.send_message(call.message.chat.id, f"Выберите память для модели '{model}':", reply_markup=memory_buttons)
-    bot.answer_callback_query(callback_query_id=call.id)
+    phone_prices_obj.handle_model_callback(bot ,call)
 
 @bot.callback_query_handler(func=lambda call: "memory:" in call.data)
 def handle_memory_callback(call):
-    model_pattern = r"'(.*?)'"
-    model = re.search(model_pattern, call.message.text).group(1)
-    memory = call.data.split(":")[1]
-    options = []
-    message = bot.send_message(call.message.chat.id, "Введите емкость аккумулятора (в процентах):")
-    bot.register_next_step_handler(message, handle_battery_capacity, phone_prices, model, memory, options)
-    bot.answer_callback_query(callback_query_id=call.id)
+    phone_prices_obj.handle_memory_callback(bot ,call)
 
-def handle_battery_capacity(message, phone_prices, model, memory, options):
-    try:
-        battery_capacity = int(message.text)
-        if battery_capacity < 85:
-            options.append("Замена аккумулятора")
-        message = bot.send_message(message.chat.id, "Только устройство? (да / нет):")
-        bot.register_next_step_handler(message, handle_device_only, phone_prices, model, memory, options)
-    except ValueError:
-        bot.send_message(message.chat.id, "Емкость аккумулятора должна быть числом. Пожалуйста, введите число:")
-
-def handle_device_only(message, phone_prices, model, memory, options):
-    if message.text.lower() == "да":
-        options.append("Только устройство")
-    message = bot.send_message(message.chat.id, "Устройство+коробка? (да / нет):")
-    bot.register_next_step_handler(message, handle_display, phone_prices, model, memory, options)
-
-def handle_display(message, phone_prices, model, memory, options):
-    if message.text.lower() == "да":
-        options.append("устройство+коробка")
-    message = bot.send_message(message.chat.id, "Замена экрана (да / нет):")
-    bot.register_next_step_handler(message, handle_device_box, phone_prices, model, memory, options)
-
-def handle_device_box(message, phone_prices, model, memory, options):
-    if message.text.lower() == "да":
-        options.append("Замена экрана")
-    message = bot.send_message(message.chat.id, "Замена задней крышки? (да / нет):")
-    bot.register_next_step_handler(message, handle_back_cover, phone_prices, model, memory, options)
-
-def handle_back_cover(message, phone_prices, model, memory, options):
-    if message.text.lower() == "да":
-        options.append("Замена задней крышки")
-    total_price = phone_prices.get_price(model, memory, options)
-    response = f"* Модель: {model}, Память: {memory}\n"
-    response += f"* Цена в Трейдин: до {total_price:.0f} рублей\n"
-    response += f"*На что повлияла цена:\n {options}\n*Если состояние неудовлетворительное,\nто уточни у сервисных менеджеров"
-    bot.send_message(message.chat.id, response)
-    # send_debug_message(f"{message.from_user.id} Трейдин ОК")
-
-## Конец опросника
 
 ## Кто работает сегодня или завтра
 
