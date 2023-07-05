@@ -523,7 +523,8 @@ def handle_usd_rate(message):
 def handle_restart(message):
     bot.send_message(message.chat.id, "Еще раз")
     os.execl(sys.executable, sys.executable, *sys.argv)
-        
+
+# Если текст не соответствует ни одному варианту, то запускается основной скрипт
 @bot.message_handler(content_types=['text'])
 def message_handler(message):
     handle_text_message(bot, user_data, message)
