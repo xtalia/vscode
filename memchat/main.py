@@ -10,7 +10,8 @@ import time
 from datetime import datetime, timedelta
 
 from sn_cutter import sn_cutter
-from appsaratov_parser import handle_text_message, handle_callback_query
+from appsaratov_parser import asp_text_message, asp_callback_query
+from usd_rate import handle_usd_rate
 
 # Импорты заморских
 import gspread
@@ -183,11 +184,11 @@ user_data = {}
 # Функции
 
 
-def send_debug_message(text):
-    if DEBUG_LVL:
-        bot.send_message(ERROR_CHAT_ID, f'DEBUG MESSAGE:\n{text}')
-    else:
-        print(text)
+# def # send_debug_message(text):
+    # if DEBUG_LVL:
+    #     bot.send_message(ERROR_CHAT_ID, f'DEBUG MESSAGE:\n{text}')
+    # else:
+    #     print(text)
 
 def handle_exception(e):
     tb_str = traceback.format_exception(type(e), e, e.__traceback__)
@@ -196,7 +197,7 @@ def handle_exception(e):
     bot.send_message(ERROR_CHAT_ID, text)
 
 def main():
-    send_debug_message(DEBUG_LVL)
+    # send_debug_message(DEBUG_LVL)
     while True:
         try:
             bot.polling(none_stop=True, interval=0)
@@ -204,19 +205,19 @@ def main():
             handle_exception(e)
         time.sleep(5)
 
-def get_usd_rate(date):
-    url = f'https://www.cbr.ru/scripts/XML_daily_eng.asp?date_req={date.strftime("%d/%m/%Y")}'
-    response = requests.get(url)
-    soup = BeautifulSoup(response.content, 'xml')
-    valute = soup.find('CharCode', text='USD').find_parent('Valute')
-    nominal = int(valute.Nominal.string)
-    value = float(valute.Value.string.replace(',', '.'))
-    return value / nominal
+# def get_usd_rate(date):
+#     url = f'https://www.cbr.ru/scripts/XML_daily_eng.asp?date_req={date.strftime("%d/%m/%Y")}'
+#     response = requests.get(url)
+#     soup = BeautifulSoup(response.content, 'xml')
+#     valute = soup.find('CharCode', text='USD').find_parent('Valute')
+#     nominal = int(valute.Nominal.string)
+#     value = float(valute.Value.string.replace(',', '.'))
+#     return value / nominal
 
 ## Калькулятор по карте или в рассрочку по таксе AppSaratov
 def process_cash_amount(message): 
     try:
-        send_debug_message(f"{message.from_user.id} запросил Калькулятор")
+        # send_debug_message(f"{message.from_user.id} запросил Калькулятор")
         cash = float(message.text.strip())
 
         # Расчет по карте, рассрочку, кредиту, кешбеку
@@ -236,10 +237,10 @@ def process_cash_amount(message):
 
         # Вывод пользователю
         bot.send_message(chat_id=message.chat.id, text=output)
-        send_debug_message("Калькулятор ОК")
+        # send_debug_message("Калькулятор ОК")
     except ValueError:
         bot.send_message(chat_id=message.chat.id, text="Сломался калькулятор, что-то пошло не так (Только цифры)")
-        send_debug_message("Калькулятор Ошибка")
+        # send_debug_message("Калькулятор Ошибка")
 
 ## Даже не знаю зачем, но пусть будет
 def contact_us(message):
@@ -248,13 +249,13 @@ def contact_us(message):
 ## Тестовая функция для обкатки
 def test_table(message):
     global DEBUG_LVL 
-    send_debug_message(f"Переключаем на внутреннюю отладку")
+    # send_debug_message(f"Переключаем на внутреннюю отладку")
     if DEBUG_LVL:
         DEBUG_LVL = False
     else:
         DEBUG_LVL = True
-        send_debug_message("Переключаем на внешнюю отладку")
-        send_debug_message(f"DEBUG_LVL: {DEBUG_LVL}")
+        # send_debug_message("Переключаем на внешнюю отладку")
+        # send_debug_message(f"DEBUG_LVL: {DEBUG_LVL}")
         
 
 ## Обрезчик серийника
@@ -313,7 +314,7 @@ def handle_serial_number_cutter(message):
 
 @bot.message_handler(func=lambda message: message.text.lower() in TRADEIN_TRIGGERS)
 def handle_tradein(message):
-    send_debug_message(f"{message.from_user.id} запросил Трейдин")
+    # send_debug_message(f"{message.from_user.id} запросил Трейдин")
     models = phone_prices.models.keys()
     model_buttons = types.InlineKeyboardMarkup(row_width=2)
     for model in models:
@@ -381,14 +382,14 @@ def handle_back_cover(message, phone_prices, model, memory, options):
     response += f"* Цена в Трейдин: до {total_price:.0f} рублей\n"
     response += f"*На что повлияла цена:\n {options}\n*Если состояние неудовлетворительное,\nто уточни у сервисных менеджеров"
     bot.send_message(message.chat.id, response)
-    send_debug_message(f"{message.from_user.id} Трейдин ОК")
+    # send_debug_message(f"{message.from_user.id} Трейдин ОК")
 
 ## Конец опросника
 
 ## Кто работает сегодня или завтра
 
 @bot.message_handler(func=lambda message: message.text.lower() in WW_TRIGGERS)
-def work_message(message):
+def who_work(message):
     # Define the inline keyboard markup
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton(text='Сегодня', callback_data='today'),
@@ -399,7 +400,7 @@ def work_message(message):
     bot.send_message(chat_id=message.chat.id, text='Хочешь узнать, кто работает?\nВыберите день:', reply_markup=keyboard)
 
 @bot.callback_query_handler(func=lambda call: call.data in ['today', 'tomorrow'])
-def callback_query(call):
+def ww_callback_query(call):
     # Define the day offset and text based on the callback data
     day_offset = 0 if call.data == 'today' else 1
     day_text = 'Сегодня' if day_offset == 0 else 'Завтра'
@@ -434,14 +435,15 @@ def callback_query(call):
 
     # Send the message
     bot.send_message(chat_id=call.message.chat.id, text=text)
-    send_debug_message(f"Запрос работников успешен")    
+    # send_debug_message(f"Запрос работников успешен")    
 
 ## Конец
 
 ## Считывает купюры (Такая красота получилась после рефакторинга)
 @bot.message_handler(func=lambda message: message.text.lower() in MEGACALC_TRIGGERS)
+
+@bot.message_handler(func=lambda message: message.text.lower() in MEGACALC_TRIGGERS)
 def start_megacalculator(message):
-    send_debug_message(f"{message.from_user.id} запросил мегакалькулятор")
     # Define a dictionary of denominations and their corresponding messages
     denominations = {
         500: "Сколько купюр номиналом 500?",
@@ -477,45 +479,10 @@ def calculate_denomination(message, denominations, count, denomination):
             bot.send_message(message.chat.id, message_text)
     except ValueError:
         bot.send_message(message.chat.id, "Пожалуйста, введите число.")
-    send_debug_message(f"Мегакалькулятор ОК")
 
 @bot.message_handler(func=lambda message: message.text.lower() in USD_RATE_COMMANDS)
-def handle_usd_rate(message):
-    send_debug_message(f"{message.from_user.id} запросил Курс Доллара")
-    today = datetime.today()
-    yesterday = today - timedelta(days=1)
-    day_before_yesterday = today - timedelta(days=2)
-
-    usd_rate_today = get_usd_rate(today)
-    usd_rate_yesterday = get_usd_rate(yesterday)
-    usd_rate_day_before_yesterday = get_usd_rate(day_before_yesterday)
-
-    price_diff_today_yesterday = usd_rate_today - usd_rate_yesterday
-    price_diff_yesterday_day_before_yesterday = usd_rate_yesterday - usd_rate_day_before_yesterday
-
-    if price_diff_today_yesterday > 0:
-        arrow_emoji_today_yesterday = '⬆️'
-    elif price_diff_today_yesterday < 0:
-        arrow_emoji_today_yesterday = '⬇️'
-    else:
-        arrow_emoji_today_yesterday = '➡️'
-
-    if price_diff_yesterday_day_before_yesterday > 0:
-        arrow_emoji_yesterday_day_before_yesterday = '⬆️'
-    elif price_diff_yesterday_day_before_yesterday < 0:
-        arrow_emoji_yesterday_day_before_yesterday = '⬇️'
-    else:
-        arrow_emoji_yesterday_day_before_yesterday = '➡️'
-
-    today_str = today.strftime("%d.%m.%Y")
-    yesterday_str = yesterday.strftime("%d.%m.%Y")
-    day_before_yesterday_str = day_before_yesterday.strftime("%d.%m.%Y")
-
-    text = f'💵 Сегодня: {usd_rate_today:.2f}\n💵 {yesterday_str}: {usd_rate_yesterday:.2f} ({arrow_emoji_today_yesterday} {abs(price_diff_today_yesterday):.2f})\n💵 {day_before_yesterday_str}: {usd_rate_day_before_yesterday:.2f} ({arrow_emoji_yesterday_day_before_yesterday} {abs(price_diff_yesterday_day_before_yesterday):.2f})'
-    bot.reply_to(message, text)
-    send_debug_message(f"Курс доллара ОК")
-
-# ------------------------------------------------------------------------------
+def start_usd_rate(message):
+    handle_usd_rate(bot, message)
 
 # Обработчики команд
 
@@ -527,11 +494,11 @@ def handle_restart(message):
 # Если текст не соответствует ни одному варианту, то запускается основной скрипт
 @bot.message_handler(content_types=['text'])
 def message_handler(message):
-    handle_text_message(bot, user_data, message)
+    asp_text_message(bot, user_data, message)
 
 @bot.callback_query_handler(func=lambda call: call.data in ['Саратов', 'Воронеж','Липецк'])
 def callback_query_handler(call):
-    handle_callback_query(bot, user_data, call)
+    asp_callback_query(bot, user_data, call)
 
 # ------------------------------------------------------------------------------
 
