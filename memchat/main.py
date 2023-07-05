@@ -10,6 +10,7 @@ import time
 from datetime import datetime, timedelta
 
 from sn_cutter import sn_cutter
+from appsaratov_parser import handle_text_message, handle_callback_query
 
 # Импорты заморских
 import gspread
@@ -523,7 +524,7 @@ def handle_restart(message):
     bot.send_message(message.chat.id, "Еще раз")
     os.execl(sys.executable, sys.executable, *sys.argv)
 
-@bot.message_handler(content_types=['text'])
+""" @bot.message_handler(content_types=['text'])
 def handle_text_message(message):
     try:
         user_data[message.chat.id] = {"product_name": message.text}
@@ -574,16 +575,16 @@ def handle_callback_query(call):
     except Exception as e:
         send_debug_message(e)
         bot.send_message(chat_id=call.message.chat.id, text="Ошибка у парсера. Попробуй еще раз или сообщи Сергу")
-        send_debug_message("Ошибка парсера")
+        send_debug_message("Ошибка парсера") """
         
 
-# @bot.message_handler(content_types=['text'])
-# def message_handler(message):
-#     handle_text_message(bot, user_data, message)
+@bot.message_handler(content_types=['text'])
+def message_handler(message):
+    handle_text_message(bot, user_data, message)
 
-# @bot.callback_query_handler(func=lambda call: call.data in ['Саратов', 'Воронеж','Липецк'])
-# def callback_query_handler(call):
-#     handle_callback_query(bot, user_data, call)
+@bot.callback_query_handler(func=lambda call: call.data in ['Саратов', 'Воронеж','Липецк'])
+def callback_query_handler(call):
+    handle_callback_query(bot, user_data, call)
 
 # ------------------------------------------------------------------------------
 

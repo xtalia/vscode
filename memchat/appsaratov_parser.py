@@ -1,7 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
-from main import send_debug_message
 
 def handle_text_message(bot, user_data, message):
     try:
@@ -12,9 +11,9 @@ def handle_text_message(bot, user_data, message):
                               InlineKeyboardButton("Воронеж", callback_data='Воронеж')],
                              [InlineKeyboardButton("Липецк", callback_data='Липецк')]
                          ]))
-        send_debug_message(f"{message.from_user.id} запросил антибота")
+        #send_debug_message(f"{message.from_user.id} запросил антибота")
     except Exception as e:
-        send_debug_message(e)
+        #send_debug_message(e)
         bot.send_message(chat_id=message.chat.id, text="Ошибка. Попробуйте еще раз.")
 
 def handle_callback_query(bot, user_data, call):
@@ -29,7 +28,7 @@ def handle_callback_query(bot, user_data, call):
         response = requests.get(url)
         soup = BeautifulSoup(response.text, "html.parser")
         products = soup.find_all("div", class_="catalog-section-item-content")
-        send_debug_message("Антибот выполняет запрос")
+        #send_debug_message("Антибот выполняет запрос")
 
         if products:
             for product in products:
@@ -48,8 +47,8 @@ def handle_callback_query(bot, user_data, call):
                 bot.send_message(chat_id=call.message.chat.id, text=message_body)
         else:
             bot.send_message(chat_id=call.message.chat.id, text="Не найдено - попробуй еще раз")
-        send_debug_message("Антибот ОК")
+        #send_debug_message("Антибот ОК")
     except Exception as e:
-        send_debug_message(e)
+        #send_debug_message(e)
         bot.send_message(chat_id=call.message.chat.id, text="Ошибка у парсера. Попробуй еще раз или сообщи Сергу")
-        send_debug_message("Ошибка парсера")
+        #send_debug_message("Ошибка парсера")
