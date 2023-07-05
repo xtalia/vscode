@@ -13,6 +13,7 @@ from sn_cutter import sn_cutter
 from appsaratov_parser import asp_text_message, asp_callback_query
 from usd_rate import handle_usd_rate
 import megacalculator
+import who_work
 
 # Импорты заморских
 import gspread
@@ -380,7 +381,7 @@ def handle_back_cover(message, phone_prices, model, memory, options):
 
 ## Кто работает сегодня или завтра
 
-import who_work
+
 
 @bot.message_handler(func=lambda message: message.text.lower() in WW_TRIGGERS)
 def handle_who_work(message):
