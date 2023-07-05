@@ -177,12 +177,16 @@ def handle_test(message): # Выполнение тестовой функции
 def handle_contact_us(message): # Контактус
     contact_us(message)
 
+import as_calculator
+
 @bot.message_handler(func=lambda message: message.text.lower() in CALCULATE_TRIGGERS)
 def calculate_prices(message): # Запуск калькулятора
 
     # Ask user for cash amount
     bot.send_message(chat_id=message.chat.id, text="Сколько за наличные:")
-    bot.register_next_step_handler(message, process_cash_amount)
+    bot.register_next_step_handler(message, as_calculator.process_cash_amount, bot)
+
+
 
 @bot.message_handler(func=lambda message: message.text.lower() in SN_TRIGGERS)
 def handle_serial_number_cutter(message):
