@@ -7,7 +7,6 @@ import re
 import sys
 import traceback
 import time
-from datetime import datetime, timedelta
 
 from sn_cutter import sn_cutter
 from appsaratov_parser import asp_text_message, asp_callback_query
@@ -17,12 +16,9 @@ import who_work
 
 # Импорты заморских
 import gspread
-import requests
 import telebot
-from bs4 import BeautifulSoup
 from oauth2client.service_account import ServiceAccountCredentials
 from telebot import types
-from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 # from google.colab import drive # GC
 
 
@@ -59,17 +55,6 @@ MEGACALC_TRIGGERS = ["мегакалькулятор", "мега", "mega", "mc",
 WW_TRIGGERS = ["кто работает", "кто", "rnj", "/whowork"] # вызова списка работающих сегодня или завтра
 
 USD_RATE_COMMANDS = ['курс доллара', 'курс', 'kurs', 'rehc', '/usdrub']
-
-# Словарь значений статуса работников или места работы
-WW_PLACES = {
-    'У': 'как Управляющий',
-    'М': 'как Менеджер',
-    'РБ': 'в ТЦ Рубин',
-    'Р': 'на Рахова',
-    'К': 'на Казачьей',
-    'Ч': 'на Чернышевского',
-    'И': 'как SMM'
-}
 
 # WIN Получаем путь к текущей директории скрипта
 dir_path = os.path.dirname(os.path.realpath(__file__))
