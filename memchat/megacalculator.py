@@ -1,14 +1,12 @@
-# Define a dictionary of denominations and their corresponding messages
-denominations = {
+def start_megacalculator(bot, message):
+    # Start the calculation with the first denomination
+    count = {}
+    denominations = {
     500: "Сколько купюр номиналом 500?",
     1000: "Сколько купюр номиналом 1000?",
     2000: "Сколько купюр номиналом 2000?",
     5000: "Сколько у вас купюр номиналом 5000?"
-}
-
-def start_megacalculator(bot, message):
-    # Start the calculation with the first denomination
-    count = {}
+    }
     next_denomination(bot, message, denominations, count)
 
 def next_denomination(bot, message, denominations, count):
@@ -22,7 +20,7 @@ def next_denomination(bot, message, denominations, count):
 def calculate_denomination(bot, message, denominations, count, denomination):
     try:
         # Get the count of bills for the current denomination
-        count[denomination] = int(message.text)
+        count[denomination] = int(float(message.text))
         # If there are more denominations to calculate, move on to the next one
         if denominations:
             next_denomination(bot, message, denominations, count)
@@ -34,4 +32,4 @@ def calculate_denomination(bot, message, denominations, count, denomination):
             message_text += f'\nИтого: {total_sum}'
             bot.send_message(message.chat.id, message_text)
     except ValueError:
-        bot.send_message(message.chat.id, "Пожалуйста, введите число.")
+        bot.send_message(message.chat.id, "Число должно быть цельным, запусти команду еще раз")
