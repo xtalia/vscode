@@ -1,12 +1,12 @@
-def megacalculator(bot, message):
-    # send_debug_message(f"{message.from_user.id} запросил мегакалькулятор")
-    # Define a dictionary of denominations and their corresponding messages
-    denominations = {
-        500: "Сколько купюр номиналом 500?",
-        1000: "Сколько купюр номиналом 1000?",
-        2000: "Сколько купюр номиналом 2000?",
-        5000: "Сколько у вас купюр номиналом 5000?"
-    }
+# Define a dictionary of denominations and their corresponding messages
+denominations = {
+    500: "Сколько купюр номиналом 500?",
+    1000: "Сколько купюр номиналом 1000?",
+    2000: "Сколько купюр номиналом 2000?",
+    5000: "Сколько у вас купюр номиналом 5000?"
+}
+
+def start_megacalculator(bot, message):
     # Start the calculation with the first denomination
     count = {}
     next_denomination(bot, message, denominations, count)
@@ -17,7 +17,7 @@ def next_denomination(bot, message, denominations, count):
     # Ask the user for the count of bills for the current denomination
     bot.send_message(message.chat.id, question)
     # Register the next step handler with the current denomination and count
-    bot.register_next_step_handler(message, calculate_denomination, bot, denominations, count, denomination)
+    bot.register_next_step_handler(message, lambda message: calculate_denomination(bot, message, denominations, count, denomination))
 
 def calculate_denomination(bot, message, denominations, count, denomination):
     try:
@@ -35,4 +35,3 @@ def calculate_denomination(bot, message, denominations, count, denomination):
             bot.send_message(message.chat.id, message_text)
     except ValueError:
         bot.send_message(message.chat.id, "Пожалуйста, введите число.")
-    # send_debug_message(f"Мегакалькулятор ОК")
