@@ -206,15 +206,6 @@ def main():
             handle_exception(e)
         time.sleep(5)
 
-# def get_usd_rate(date):
-#     url = f'https://www.cbr.ru/scripts/XML_daily_eng.asp?date_req={date.strftime("%d/%m/%Y")}'
-#     response = requests.get(url)
-#     soup = BeautifulSoup(response.content, 'xml')
-#     valute = soup.find('CharCode', text='USD').find_parent('Valute')
-#     nominal = int(valute.Nominal.string)
-#     value = float(valute.Value.string.replace(',', '.'))
-#     return value / nominal
-
 ## Калькулятор по карте или в рассрочку по таксе AppSaratov
 def process_cash_amount(message): 
     try:
