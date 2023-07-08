@@ -126,25 +126,25 @@ class PhonePrices:
             bot.send_message(message.chat.id, "Емкость аккумулятора должна быть числом. Пожалуйста, введите число:")
 
     def handle_device_only(self, message, bot, model, memory, options):
-        if message.text.lower() == "да" or "lf":
+        if message.text.lower() == "да":
             options.append("Только устройство")
         message = bot.send_message(message.chat.id, "Устройство+коробка? (да / нет):")
         bot.register_next_step_handler(message, self.handle_display, bot, model, memory, options)
 
     def handle_display(self,message, bot, model, memory, options):
-        if message.text.lower() == "да" or "lf":
+        if message.text.lower() == "да":
             options.append("устройство+коробка")
         message = bot.send_message(message.chat.id,"Замена экрана (да / нет):")
         bot.register_next_step_handler(message ,self.handle_device_box ,bot ,model ,memory ,options)
 
     def handle_device_box(self,message ,bot, model, memory, options):
-        if message.text.lower() == "да" or "lf":
+        if message.text.lower() == "да":
             options.append("Замена экрана")
         message = bot.send_message(message.chat.id,"Замена задней крышки? (да / нет):")
         bot.register_next_step_handler(message ,self.handle_back_cover ,bot ,model,memory,options)
 
     def handle_back_cover(self,message,bot, model, memory, options):
-        if message.text.lower() == "да" or "lf":
+        if message.text.lower() == "да":
             options.append("Замена задней крышки")
         total_price = self.get_price(model,memory,options)
         response = f"* Модель: {model}, Память: {memory}\n"
