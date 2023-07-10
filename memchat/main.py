@@ -20,7 +20,6 @@ import gspread
 import telebot
 from oauth2client.service_account import ServiceAccountCredentials
 from telebot import types
-from dotenv import load_dotenv
 # from google.colab import drive # GC
 
 
@@ -39,10 +38,10 @@ with open(os.path.join(dir_path, 'creds.json'), 'r') as f:
 with open(os.path.join(dir_path, 'config.json'), 'r') as f:
      config_data = json.load(f)
 
-
 ERROR_CHAT_ID = '184944023' # Кому присылать сообщения об ошибке?
-DEBUG_LVL = False if os.getenv('DEBUG') else True
-print(DEBUG_LVL)
+print(os.environ.get('DEBUG'))
+DEBUG_LVL = False if os.environ.get('DEBUG') else True
+print(os.environ.get('DEBUG'))
 
 bot = telebot.TeleBot(config_data["bot"]["token_debug"] if DEBUG_LVL == True else config_data["bot"]["token"], skip_pending=True)
 
@@ -222,5 +221,4 @@ def callback_query_handler(call):
 # ------------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    load_dotenv()
     main()
