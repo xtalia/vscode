@@ -7,6 +7,8 @@ COPY . /app
 # Указываем рабочую директорию
 WORKDIR /app
 
+ENV DEBUG=False
+
 # Устанавливаем зависимости
 RUN pip3 install -r requirements.txt
 

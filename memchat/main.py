@@ -28,7 +28,6 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 with open(os.path.join(dir_path, 'creds.json'), 'r') as f:
     cred_json = json.load(f)
 
-
 # GC Монтируем Google Диск
 # drive.mount('/content/drive')
 # creds_file = '/content/drive/MyDrive/creds.json'
@@ -39,12 +38,10 @@ with open(os.path.join(dir_path, 'creds.json'), 'r') as f:
 with open(os.path.join(dir_path, 'config.json'), 'r') as f:
      config_data = json.load(f)
 
-# # Получаем значение переменной bot из загруженных данных
-# bot_token = config_data['bot_token']
-
-bot = telebot.TeleBot(config_data["bot"]["token"], skip_pending=True)
 ERROR_CHAT_ID = '184944023' # Кому присылать сообщения об ошибке?
-DEBUG_LVL = False
+DEBUG_LVL = False if os.environ.get('DEBUG') else True
+
+bot = telebot.TeleBot(config_data["bot"]["token_debug"] if DEBUG_LVL == True else config_data["bot"]["token"], skip_pending=True)
 
 
 # Кнопки и триггеры
@@ -98,13 +95,6 @@ phone_prices_obj = phone_prices.PhonePrices(sheet_url ,client)
 ###
 
 # Функции
-
-
-# def # send_debug_message(text):
-    # if DEBUG_LVL:
-    #     bot.send_message(ERROR_CHAT_ID, f'DEBUG MESSAGE:\n{text}')
-    # else:
-    #     print(text)
 
 def handle_exception(e):
     tb_str = traceback.format_exception(type(e), e, e.__traceback__)
