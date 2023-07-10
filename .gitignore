@@ -1,6 +1,5 @@
 /memchat/__pycache__
 /memchat/creds.json
-/memchat/to production
-/memchat/to production.zip
 /memchat/config.json
 /memchat/vscode.code-workspace
+/memchat/.env
