@@ -39,9 +39,9 @@ with open(os.path.join(dir_path, 'config.json'), 'r') as f:
      config_data = json.load(f)
 
 ERROR_CHAT_ID = '184944023' # Кому присылать сообщения об ошибке?
-print(os.environ.get('DEBUG'))
 DEBUG_LVL = False if os.environ.get('DEBUG') else True
 print(os.environ.get('DEBUG'))
+print(DEBUG_LVL)
 
 bot = telebot.TeleBot(config_data["bot"]["token_debug"] if DEBUG_LVL == True else config_data["bot"]["token"], skip_pending=True)
 
