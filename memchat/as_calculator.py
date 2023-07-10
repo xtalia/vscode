@@ -4,9 +4,9 @@ def process_cash_amount(message, bot):
         cash = float(message.text.strip())
 
         # Расчет по карте, рассрочку, кредиту, кешбеку
-        card_price = round(cash * 1.03 / 10) * 10 - 10
-        rassrochka_price = round(cash * 1.08 / 10) * 10 - 10
-        credit_price = round(cash * 1.03 / 10) * 10 - 10
+        card_price = round(cash * 1.03, -2)  - 10
+        rassrochka_price = round(cash * 1.08, -2)  - 10
+        credit_price = round(cash * 1.03, -2)  - 10
         cashback_amount = round(cash * 0.005)
 
         # Оформление сообщения

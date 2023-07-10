@@ -36,13 +36,13 @@ with open(os.path.join(dir_path, 'creds.json'), 'r') as f:
 #     cred_json = json.load(f)
 # Открываем файл config.json и загружаем данные
 
-# with open('config.json', 'r') as f:
-#     config_data = json.load(f)
+with open(os.path.join(dir_path, 'config.json'), 'r') as f:
+     config_data = json.load(f)
 
 # # Получаем значение переменной bot из загруженных данных
 # bot_token = config_data['bot_token']
 
-bot = telebot.TeleBot('6057005343:AAHWzzPQ-IshPv_Z5y4uPKuHWE160TqpaeM', skip_pending=True)
+bot = telebot.TeleBot(config_data["bot"]["token"], skip_pending=True)
 ERROR_CHAT_ID = '184944023' # Кому присылать сообщения об ошибке?
 DEBUG_LVL = False
 
