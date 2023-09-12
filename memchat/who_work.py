@@ -1,15 +1,13 @@
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from datetime import datetime, timedelta
+import json
 
-WW_PLACES = {
-    'У': 'как Управляющий',
-    'М': 'как Менеджер',
-    'РБ': 'в ТЦ Рубин',
-    'Р': 'на Рахова',
-    'К': 'на Казачьей',
-    'Ч': 'на Чернышевского',
-    'И': 'как SMM'
-}
+with open('settings.json', 'r', encoding='utf-8') as json_file:
+    data = json.load(json_file)
+
+WW_LINK = data.get('WW_LINK')
+print(WW_LINK)
+WW_PLACES = data.get('WW_PLACES')
 
 # Define the inline keyboard markup
 keyboard = InlineKeyboardMarkup([
@@ -27,7 +25,7 @@ def ww_callback_query(bot, call, client):
     day_text = 'Сегодня' if day_offset == 0 else 'Завтра'
 
     # Open the Google Sheets document by URL
-    sheet = client.open_by_url('https://docs.google.com/spreadsheets/d/13KUmHtRXYbXjBE7KQ_4MFQ5VsgUYqu2heURY1y2NwiE/edit#gid=0')
+    sheet = client.open_by_url(WW_LINK)
 
     # Select the worksheet by index (0-indexed)
     worksheet = sheet.get_worksheet(0)
