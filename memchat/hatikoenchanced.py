@@ -1,12 +1,15 @@
+
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import os
+import time
 import json
-from itertools import groupby
 import pickle
 import datetime
 import requests
 from bs4 import BeautifulSoup
+from telebot import types
+import config
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 with open(os.path.join(dir_path, 'creds.json'), 'r') as f:
@@ -19,6 +22,8 @@ creds = ServiceAccountCredentials.from_json_keyfile_dict(cred_json, scope)
 # client = gspread.authorize(creds)
 # spreadsheet = client.open_by_url('https://docs.google.com/spreadsheets/d/10jbgLdWsMZ80T2mnqHj_68hW0mOOvcLD3z5-Q1sC3wo/edit#gid=2086861705')
 
+replacement_dict = config.replacement_dict
+
 # функция парсинга цен
 def get_price(url):
     response = requests.get(url)
@@ -28,6 +33,7 @@ def get_price(url):
         price = price_element.text.replace(' ', '')
         return int(price)
     return None
+
 
 # Функция для получения данных из Google Таблицы
 def get_data_from_spreadsheet():
@@ -114,6 +120,7 @@ column_d_prices = [row[3] for row in prices_values]  # Значения из с�
 column_e_prices = [row[4] for row in prices_values]  # Значения из столбца E (price_lip)
 column_f_prices = [row[5] for row in prices_values]  # Значения из столбца F (price_vor)
 column_g_prices = [row[6] for row in prices_values]  # Значения из столбца G (stock)
+column_h_prices = [row[7] for row in prices_values]  # Значения из столбца H (status)
 
 # Создание сложного словаря на основе столбцов A, B, C, D, E, F, G листа "Цены"
 prices_dict = {}
@@ -127,6 +134,7 @@ for i in range(len(column_a_prices)):
     price_lip = column_e_prices[i]
     price_vor = column_f_prices[i]
     stock = column_g_prices[i]
+    status = column_h_prices[i]
 
     if stock not in exclude:
         if item_id in prices_dict:
@@ -138,7 +146,8 @@ for i in range(len(column_a_prices)):
                 'price_sar': price_sar,
                 'price_lip': price_lip,
                 'price_vor': price_vor,
-                'stock': [stock][1:]
+                'stock': [stock][1:],
+                'status': status
             }
 
 # Получение листа "Остатки" таблицы
@@ -170,76 +179,113 @@ for item_id, item_info in prices_dict.items():
         item_info['stock'] = stocks
     final_dict[item_id] = item_info
 
+def print_item_info(item_id, item_info):
+    message = ""
+    message = f'🆔 {item_id}\n'
+    message += f'🔢 {item_info["vendor_code"]}\n'
+    message += f'🏷️ {item_info["item_name"]}\n'
+
+    # Определение статуса товара
+    status = int(item_info["status"])
+    if status > 9998:
+        message += '😄 В наличии\n'
+    elif status > 98:
+        message += '🤔 Под заказ\n'
+    else:
+        message += '😢 Нет на складе\n'
+
+    # Сравнение цен с внешними сайтами
+    message += compare_prices(item_info, item_info["vendor_code"])
+    
+    if item_info["stock"]:
+
+        stocks = list(item_info["stock"])
+
+        for i, stock in enumerate(stocks):
+
+            original_value = stock
+            replacement_value = replacement_dict.get(original_value)  
+
+            if replacement_value:
+                stocks[i] = replacement_value
+
+        item_info["stock"] = tuple(stocks)
+
+        message += f'📦: {item_info["stock"]}\n'
+
+    else:
+        message += '🕷️ Нет на складе 🕸️\n'
+    message += '*ੈ✩‧₊˚༺☆༻*ੈ✩‧₊˚\n'
+    return message
+
+def compare_prices(item_info, search_query):
+    sites = {
+        '🆂': {
+            'url': f'https://hatiko.ru/search/?query={search_query}',
+            'price_key': 'price_sar'
+        },
+        '🆅': {
+            'url': f'https://voronezh.hatiko.ru/search/?query={search_query}',
+            'price_key': 'price_vor'
+        },
+        '🅻': {
+            'url': f'https://lipetsk.hatiko.ru/search/?query={search_query}',
+            'price_key': 'price_lip'
+        }
+    }
+    
+    message = ''
+    
+    for site, site_info in sites.items():
+        url = site_info['url']
+        price_key = site_info['price_key']
+        price = int(item_info[price_key])
+        external_price = int(get_price(url))
+        
+        price_difference = abs(external_price - price)
+        threshold = 0.2  # 20% threshold
+
+        if external_price is not None and price_difference > threshold * price:
+            message += f'🤯💱 проверь в мс (💰 {price} \ 🌐 {external_price})\n'
+        elif external_price != price:
+            message += f'🌐＄ {site}: {external_price}\n'
+        else:
+            message += f'💰＄ {site}: {price}\n'
+    
+    return message
+
+def search_items(bot, search_query, search_type, chat_id) -> str:
+    bot.send_message(chat_id, "Начинаем поиск")
+    count = 0
+    try:
+        for item_id, item_info in final_dict.items():
+            if search_type == "vendor_code":
+                if search_query == item_info["vendor_code"]:
+                    count += 1
+                    result = print_item_info(item_id, item_info)
+                    bot.send_message(chat_id, result)
+            elif search_type == "item_name":
+                if search_query.lower() in item_info["item_name"].lower():
+                    count += 1
+                    result = print_item_info(item_id, item_info)
+                    bot.send_message(chat_id, result)
+
+            if count == 15:
+                break
+
+        if count < 15:
+            return "Готово"
+        else:
+            return "Уменьши размер поиска или используй артикул"
+    except Exception as e:
+        return None
+
+
+
 # Запрос ввода от пользователя
-search_query = input("Введите поисковой запрос: ")
+# search_query = input("Введите поисковой запрос: ")
 
-if search_query.isdigit():
-    # Поиск по vendorcode
-    count = 0  # Счетчик итераций
-    for item_id, item_info in final_dict.items():
-        if item_info["vendor_code"] == search_query:
-            count += 1
-            print(f'ID: {item_id}')
-            print(f'Vendor Code: {item_info["vendor_code"]}')
-            print(f'Name: {item_info["item_name"]}')
-
-            # Сравнение цен с сайтами
-            price_sar = int(item_info["price_sar"])
-            price_vor = int(item_info["price_vor"])
-            price_lip = int(item_info["price_lip"])
-
-            url_sar = f'https://hatiko.ru/search/?query={search_query}'
-            url_vor = f'https://voronezh.hatiko.ru/search/?query={search_query}'
-            url_lip = f'https://lipetsk.hatiko.ru/search/?query={search_query}'
-
-            price_sar_ext = int(get_price(url_sar))
-            price_vor_ext = int(get_price(url_vor))
-            price_lip_ext = int(get_price(url_lip))
-
-            if price_sar_ext is not None and price_sar_ext != price_sar:
-                print(f'External SAR Price: {price_sar_ext}')
-            elif price_sar_ext is not None:
-                print(f'Price SAR: {price_sar_ext}')
-
-            if price_lip_ext is not None and price_lip_ext != price_lip:
-                print(f'External LIP Price: {price_lip_ext}')
-            elif price_lip_ext is not None:
-                print(f'Price LIP: {price_lip_ext}')
-
-            if price_vor_ext is not None and price_vor_ext != price_vor:
-                print(f'External VOR Price: {price_vor_ext}')
-            elif price_vor_ext is not None:
-                print(f'Price VOR: {price_vor_ext}')
-
-            if item_info["stock"]:
-                print(f'Stock: {item_info["stock"]}')
-            else:
-                print('Stock: Нет на складе')
-            print('------------------')
-
-            if count == 5:
-                choice = input(f"Показаны первые 5 совпадений. Продолжить? (да/нет): ")
-                if choice.lower() != "да":
-                    break
-else:
-    # Поиск по item_name (поиск подстроки)
-    count = 0  # Counter for iterations
-    for item_id, item_info in final_dict.items():
-        if search_query.lower() in item_info["item_name"].lower():
-            count += 1
-            print(f'ID: {item_id}')
-            print(f'Vendor Code: {item_info["vendor_code"]}')
-            print(f'Name: {item_info["item_name"]}')
-            # print(f'Price SAR: {item_info["price_sar"]}')
-            # print(f'Price LIP: {item_info["price_lip"]}')
-            # print(f'Price VOR: {item_info["price_vor"]}')
-            if item_info["stock"]:
-                print(f'Stock: {item_info["stock"]}')
-            else:
-                print('Stock: Нет на складе')
-            print('------------------')
-            
-            if count == 5:
-                choice = input(f"Показаны первые 5 совпадений. Продолжить? (да/нет): ")
-                if choice.lower() != "да":
-                    break
+# if search_query.isdigit():
+#    search_by_vendor_code(search_query)
+# else:
+#    search_by_item_name(search_query)

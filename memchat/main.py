@@ -12,6 +12,7 @@ import telebot
 from telebot import types
 from oauth2client.service_account import ServiceAccountCredentials
 
+from hatikoenchanced import search_items
 import as_calculator
 import megacalculator
 import phone_prices
@@ -60,6 +61,8 @@ keyboard.add(
     telebot.types.KeyboardButton("Кто работает"),
     telebot.types.KeyboardButton("Курс доллара")
 )
+
+continue_iteration = False
 
 # Список для триггеров вызова
 # обновления кнопок
@@ -245,7 +248,7 @@ def export_config(message):
 # Обработчик нажатия кнопок инлайн-клавиатуры
 @bot.callback_query_handler(func=lambda call: call.data.startswith('export_config_'))
 def handle_export_config(callback_query):
-    file_name = callback_query.data.split('_')[2]
+    file_name = callback_query.data.replace('export_config_', '')
     file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file_name)
     
     with open(file_path, 'rb') as file:
@@ -273,13 +276,26 @@ def handle_config_file(message):
 
 # Если текст не соответствует ни одному варианту, то запускается основной скрипт
 @bot.message_handler(content_types=['text'])
-def message_handler(message):
-    asp_text_message(bot, user_data, message)
+def handle_message(message):
+    search_query = message.text
+    chat_id = message.chat.id
+
+    if search_query.isdigit():
+        result = search_items(bot, search_query, "vendor_code", chat_id)
+    else:
+        result = search_items(bot, search_query, "item_name", chat_id)
+
+    if result:
+        bot.send_message(chat_id, result)
+    else:
+        bot.send_message(chat_id, "Ничего не найдено")
 
 
-@bot.callback_query_handler(func=lambda call: call.data in ['Саратов', 'Воронеж', 'Липецк'])
-def callback_query_handler(call):
-    asp_callback_query(bot, user_data, call)
+# @bot.callback_query_handler(func=lambda call: call.data in ['Саратов', 'Воронеж', 'Липецк'])
+# def callback_query_handler(call):
+#     asp_callback_query(bot, user_data, call)
+
+
 
 
 # ------------------------------------------------------------------------------
