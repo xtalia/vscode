@@ -9,6 +9,7 @@ import traceback
 # Импорты заморских
 import gspread
 import telebot
+from telebot import types
 from oauth2client.service_account import ServiceAccountCredentials
 
 import as_calculator
@@ -21,12 +22,15 @@ from usd_rate import handle_usd_rate
 
 # from google.colab import drive # GC
 
+directory = os.path.dirname(os.path.abspath(__file__))
+files = os.listdir(directory)
+python_files = [file for file in files if file.endswith('.py')] #and file != 'main.py']
 
 # WIN Получаем путь к текущей директории скрипта
 dir_path = os.path.dirname(os.path.realpath(__file__))
 with open(os.path.join(dir_path, 'creds.json'), 'r') as f:
     cred_json = json.load(f)
-
+    
 # GC Монтируем Google Диск
 # drive.mount('/content/drive')
 # creds_file = '/content/drive/MyDrive/creds.json'
@@ -225,6 +229,47 @@ def handle_restart(message):
     bot.send_message(message.chat.id, "Еще раз")
     os.execl(sys.executable, sys.executable, *sys.argv)
 
+@bot.message_handler(commands=['export_config'])
+def export_config(message):
+
+    
+    # Создание инлайн-клавиатуры с кнопками файлов
+    keyboard = types.InlineKeyboardMarkup()
+    for file in python_files:
+        callback_data = f'export_config_{file}'
+        button = types.InlineKeyboardButton(file, callback_data=callback_data)
+        keyboard.add(button)
+    
+    bot.send_message(message.chat.id, "Выберите файл для экспорта:", reply_markup=keyboard)
+
+# Обработчик нажатия кнопок инлайн-клавиатуры
+@bot.callback_query_handler(func=lambda call: call.data.startswith('export_config_'))
+def handle_export_config(callback_query):
+    file_name = callback_query.data.split('_')[2]
+    file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file_name)
+    
+    with open(file_path, 'rb') as file:
+        bot.send_document(callback_query.message.chat.id, file)
+        bot.send_message(callback_query.message.chat.id, f"Модуль {file_name} выгружен.")
+
+@bot.message_handler(content_types=['document'])
+def handle_config_file(message):
+    if message.from_user.id == 184944023: #and message.document.file_name in python_files
+        file_info = bot.get_file(message.document.file_id)
+        downloaded_file = bot.download_file(file_info.file_path)
+        dir_path = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(dir_path, message.document.file_name)
+        
+        # Сохранение файла
+        with open(file_path, 'wb') as new_config_file:
+            new_config_file.write(downloaded_file)
+        
+        bot.send_message(message.chat.id, "Модуль был сохранен.")
+        os.execl(sys.executable, sys.executable, *sys.argv)
+    elif message.from_user.id != 184944023:
+        bot.send_message(message.chat.id, "У вас нет разрешения на загрузку файла.")
+    else:
+        bot.send_message(message.chat.id, "Файл должен быть одним из допустимых модулей Python.")
 
 # Если текст не соответствует ни одному варианту, то запускается основной скрипт
 @bot.message_handler(content_types=['text'])

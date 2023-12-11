@@ -1,13 +1,9 @@
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from datetime import datetime, timedelta
-import json
+import config 
 
-with open('settings.json', 'r', encoding='utf-8') as json_file:
-    data = json.load(json_file)
-
-WW_LINK = data.get('WW_LINK')
-print(WW_LINK)
-WW_PLACES = data.get('WW_PLACES')
+WW_LINK = config.WW_LINK
+WW_PLACES = config.WW_PLACES
 
 # Define the inline keyboard markup
 keyboard = InlineKeyboardMarkup([

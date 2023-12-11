@@ -4,3 +4,5 @@
 /memchat/vscode.code-workspace
 /memchat/.env
 /memchat/.idea
+/cache.pkl
+/memchat/cache.pkl

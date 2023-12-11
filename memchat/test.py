@@ -1,18 +1,14 @@
 import os
-import sys
-import locale
-new_locale = os.getenv('PYTHON_LOCALE', 'ru_RU.UTF-8')
-locale.setlocale(locale.LC_ALL, new_locale)
 
+# Путь к директории, содержащей main.py
+directory = os.path.dirname(os.path.abspath(__file__))
 
-preferred_encoding = locale.getpreferredencoding()
-print(sys.getdefaultencoding())
-print(preferred_encoding)
+# Получение списка файлов в директории
+files = os.listdir(directory)
 
-import json
+# Отфильтровать только файлы с расширением .py
+python_files = [file for file in files if file.endswith('.py')]
 
-with open('settings.json', 'r') as json_file:
-    data = json.load(json_file)
-
-WW_LINK = data.get('WW_LINK')
-print(WW_LINK)
+# Вывод списка файлов
+file_list = '\n'.join(python_files)
+print(f"Список модулей:\n{file_list}")
