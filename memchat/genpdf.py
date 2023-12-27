@@ -23,42 +23,41 @@ questions = {
 
 answers = {}
 
-@bot.message_handler(func=lambda message: message.text.lower() in GENPDF_TRIGGERS)
-def start_survey(message):
+def start_survey(bot, message):
     answers.clear()
-    send_question(message, 'DocNumber')
+    send_question(bot, message, 'DocNumber')
 
-def send_question(message, question_tag):
+def send_question(bot, message, question_tag):
     if question_tag in questions:
         question = questions[question_tag]
         if question is None and question_tag == 'Date':
             current_date = datetime.datetime.now().strftime('%d.%m.%Y')
             answers[question_tag] = current_date
             next_question_tag = 'name'
-            send_question(message, next_question_tag)
+            send_question(bot, message, next_question_tag)
         elif question is None and question_tag == 'SellPriceFull':
             try:
                 sell_price = int(answers['SellPrice'])
                 answers[question_tag] = num2words.num2words(sell_price, lang='ru').capitalize()
                 next_question_tag = 'PDS'
-                send_question(message, next_question_tag)
+                send_question(bot, message, next_question_tag)
             except ValueError:
                 bot.send_message(message.chat.id, "Вы ввели не целое число. Пожалуйста, запустите команду снова /generate_pdf")
                 return
         else:
             bot.send_message(message.chat.id, question)
-            bot.register_next_step_handler(message, process_answer, question_tag)
+            bot.register_next_step_handler(message, lambda msg: process_answer(bot, msg, question_tag))
     else:
         try:
-            generate_pdf(message)
+            generate_pdf(bot,message)
         except Exception as e:
             # Обработка исключения при генерации PDF
             bot.send_message(message.chat.id, f"Ошибка при генерации PDF: {str(e)}")
 
-def process_answer(message, question_tag):
+def process_answer(bot, message, question_tag):
     answers[question_tag] = message.text
     next_question_tag = get_next_question(question_tag)
-    send_question(message, next_question_tag)
+    send_question(bot, message, next_question_tag)
 
 def get_next_question(question_tag):
     question_tags = list(questions.keys())
@@ -68,7 +67,7 @@ def get_next_question(question_tag):
     else:
         return None
 
-def generate_pdf(message):
+def generate_pdf(bot, message):
     # Загрузка шаблона docx
     
     docx_template = 'template.docx'
