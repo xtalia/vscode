@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate PDF</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        Telegram.WebApp.onEvent('mainButtonClicked', function(){
+            var data = {
+                DocNumber: document.getElementById('DocNumber').value,
+                name: document.getElementById('name').value,
+                model: document.getElementById('model').value,
+                SN: document.getElementById('SN').value,
+                SellPrice: document.getElementById('SellPrice').value,
+                PDS: document.getElementById('PDS').value,
+                PDN: document.getElementById('PDN').value,
+                PDW: document.getElementById('PDW').value,
+                PDA: document.getElementById('PDA').value,
+                WhoBuy: document.getElementById('WhoBuy').value
+            };
+            tg.sendData(JSON.stringify(data));
+        });
+    </script>
+</head>
+<body>
+    <h1>Generate PDF</h1>
+    <form action="/generate_pdf" method="post">
+        <label for="DocNumber">Введите номер договора:</label>
+        <input type="text" id="DocNumber" name="DocNumber" required><br>
+
+        <label for="name">Введите ваше ФИО и номер телефона:</label>
+        <input type="text" id="name" name="name" required><br>
+
+        <label for="model">Введите модель устройства:</label>
+        <input type="text" id="model" name="model" required><br>
+
+        <label for="SN">Введите серийный номер:</label>
+        <input type="text" id="SN" name="SN" required><br>
+
+        <label for="SellPrice">Введите цену выкупа:</label>
+        <input type="text" id="SellPrice" name="SellPrice" required><br>
+
+        <label for="PDS">Введите серию паспорта:</label>
+        <input type="text" id="PDS" name="PDS" required><br>
+
+        <label for="PDN">Введите номер паспорта:</label>
+        <input type="text" id="PDN" name="PDN" required><br>
+
+        <label for="PDW">Введите дату выдачи паспорта и орган, выдавший:</label>
+        <input type="text" id="PDW" name="PDW" required><br>
+
+        <label for="PDA">Введите адрес проживания:</label>
+        <input type="text" id="PDA" name="PDA" required><br>
+
+        <label for="WhoBuy">Введите информацию о том, кто принимает:</label>
+        <input type="text" id="WhoBuy" name="WhoBuy" required><br>
+
+        <input type="submit" value="Generate PDF">
+    </form>
+    <button onclick="Telegram.WebApp.mainButtonClicked()">Основная кнопка</button>
+</body>
+</html>
