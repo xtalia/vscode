@@ -1,3 +1,29 @@
+import os
+import json
+
+
+# GC Монтируем Google Диск
+# drive.mount('/content/drive')
+# creds_file = '/content/drive/MyDrive/creds.json'
+# with open(creds_file) as f:
+#     cred_json = json.load(f)
+# Открываем файл config.json и загружаем данные
+
+try:
+    # WIN Получаем путь к текущей директории скрипта
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    with open(os.path.join(dir_path, 'creds.json'), 'r') as f:
+        cred_json = json.load(f)
+except:
+    cred_json = ""
+
+try:
+    with open(os.path.join(dir_path, 'config.json'), 'r') as f:
+        config_data = json.load(f)
+except:
+    config_data = ['bot','6057005343:AAHWzzPQ-IshPv_Z5y4uPKuHWE160TqpaeM']
+
+
 GRANTED = ['184944023', '348971882', '587612412', '529194639', '540312' ,'6212781520','6672281848']
 
 UPDATE_TRIGGERS = ["обновить", "update", "j,yjdbnm", "помощь"]

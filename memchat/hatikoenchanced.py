@@ -12,13 +12,13 @@ from bs4 import BeautifulSoup
 import config
 from tqdm import tqdm
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
-with open(os.path.join(dir_path, 'creds.json'), 'r') as f:
-    cred_json = json.load(f)
+
+
+cred_json = config.cred_json
 
 # Аутентификация и открытие таблицы
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive',
-         'https://www.googleapis.com/auth/spreadsheets']
+        'https://www.googleapis.com/auth/spreadsheets']
 creds = ServiceAccountCredentials.from_json_keyfile_dict(cred_json, scope)
 # client = gspread.authorize(creds)
 # spreadsheet = client.open_by_url('https://docs.google.com/spreadsheets/d/10jbgLdWsMZ80T2mnqHj_68hW0mOOvcLD3z5-Q1sC3wo/edit#gid=2086861705')
@@ -120,8 +120,9 @@ column_c_prices = [row[2] for row in prices_values]  # Значения из с�
 column_d_prices = [row[3] for row in prices_values]  # Значения из столбца D (price_sar)
 column_e_prices = [row[4] for row in prices_values]  # Значения из столбца E (price_lip)
 column_f_prices = [row[5] for row in prices_values]  # Значения из столбца F (price_vor)
-column_g_prices = [row[6] for row in prices_values]  # Значения из столбца G (stock)
-column_h_prices = [row[7] for row in prices_values]  # Значения из столбца H (status)
+column_g_prices = [row[6] for row in prices_values]  # Значения из столбца G (price_bal)
+column_h_prices = [row[7] for row in prices_values]  # Значения из столбца H (stock)
+column_i_prices = [row[8] for row in prices_values]  # Значения из столбца I (status)
 
 # Создание сложного словаря на основе столбцов A, B, C, D, E, F, G листа "Цены"
 prices_dict = {}
@@ -373,3 +374,6 @@ def priceup():
 #    search_by_vendor_code(search_query)
 # else:
 #    search_by_item_name(search_query)
+
+
+    

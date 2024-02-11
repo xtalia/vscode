@@ -14,7 +14,7 @@ from telebot import types
 from oauth2client.service_account import ServiceAccountCredentials
 # from google.colab import drive # GC
 
-from hatikoenchanced import search_items, send_data #, priceup
+
 import config
 import as_calculator
 import megacalculator
@@ -24,34 +24,24 @@ from sn_cutter import sn_cutter
 from usd_rate import handle_usd_rate
 import genpdf
 from phone_classifier import process_model_input 
+if config.cred_json != "":
+    
+    from hatikoenchanced import search_items, send_data #, priceup
 
 
 directory = os.path.dirname(os.path.abspath(__file__))
 files = os.listdir(directory)
 python_files = [file for file in files if file.endswith(('.py', '.docx', '.xml'))]
 
-# WIN Получаем путь к текущей директории скрипта
-dir_path = os.path.dirname(os.path.realpath(__file__))
-with open(os.path.join(dir_path, 'creds.json'), 'r') as f:
-    cred_json = json.load(f)
-    
-# GC Монтируем Google Диск
-# drive.mount('/content/drive')
-# creds_file = '/content/drive/MyDrive/creds.json'
-# with open(creds_file) as f:
-#     cred_json = json.load(f)
-# Открываем файл config.json и загружаем данные
-
-with open(os.path.join(dir_path, 'config.json'), 'r') as f:
-    config_data = json.load(f)
+cred_json = config.cred_json
+config_data = config.config_data
 
 ERROR_CHAT_ID = '184944023'  # Кому присылать сообщения об ошибке?
 DEBUG_LVL = False if os.environ.get('DEBUG') else True
 print(os.environ.get('DEBUG'))
 print(DEBUG_LVL)
 
-bot = telebot.TeleBot(config_data["bot"]["token_debug"] if DEBUG_LVL == True else config_data["bot"]["token"],
-                      skip_pending=True)
+bot = telebot.TeleBot(config_data["bot"]["token_debug"] if DEBUG_LVL == True else config_data["bot"]["token"], skip_pending=True)
 
 # Кнопки и триггеры
 welcome_message = "Я умею многое\nТы можешь мне отправить название товара или артикул, нажать на эти кнопки внизу или в меню выбрать что надо"
