@@ -2,24 +2,8 @@ from docx import Document
 from docx2pdf import convert
 import os
 import num2words
-import re
 import datetime
-
-
-questions = {
-    'DocNumber': 'Введите номер договора:',
-    'Date': None,
-    'name': 'Введите ФИО и номер телефона КЛИЕНТА:',
-    'model': 'Введите модель устройства:',
-    'SN': 'Введите серийный номер:',
-    'SellPrice': 'Введите цену выкупа:',
-    'SellPriceFull': None,
-    'PDS': 'Введите серию паспорта:',
-    'PDN': 'Введите номер паспорта:',
-    'PDW': 'Введите дату выдачи паспорта и орган, выдавший:',
-    'PDA': 'Введите адрес проживания:',
-    'WhoBuy': 'Менеджер, который принимает (Фамилия Инициалы):'
-}
+from config import questions
 
 answers = {}
 
@@ -49,7 +33,7 @@ def send_question(bot, message, question_tag):
             bot.register_next_step_handler(message, lambda msg: process_answer(bot, msg, question_tag))
     else:
         try:
-            generate_pdf(bot,message)
+            generate_docx(bot,message)
         except Exception as e:
             # Обработка исключения при генерации PDF
             bot.send_message(message.chat.id, f"Ошибка при генерации PDF: {str(e)}")
@@ -67,10 +51,12 @@ def get_next_question(question_tag):
     else:
         return None
 
-def generate_pdf(bot, message):
-    # Загрузка шаблона docx
-    
+def generate_docx(bot, message):
+    bot.send_message(message.chat.id, "Генерируем документ")
     docx_template = 'template.docx'
+    docx_file = f'{message.chat.id}_result.docx'
+
+    # Загрузка шаблона docx
     doc = Document(docx_template)
 
     # Замена тегов в шаблоне на ответы пользователя
@@ -78,22 +64,19 @@ def generate_pdf(bot, message):
         tag_placeholder = '{' + tag + '}'
         for paragraph in doc.paragraphs:
             if tag_placeholder in paragraph.text:
-                # Используем регулярное выражение для поиска тега с учетом пробелов
-                pattern = re.compile(r'\{' + re.escape(tag) + r'\}')
-                paragraph.text = re.sub(pattern, answer, paragraph.text)
+                paragraph.text = paragraph.text.replace(tag_placeholder, answer)
 
-    # Сохранение измененного документа во временный файл docx
-    temp_docx_file = 'temp_template.docx'
-    doc.save(temp_docx_file)
+    try:
+        # Сохранение отредактированного docx-документа
+        doc.save(docx_file)
 
-    # Конвертация docx в pdf
-    pdf_file = 'result.pdf'
-    convert(temp_docx_file, pdf_file)
-
-    # Отправка pdf файла пользователю
-    with open(pdf_file, 'rb') as f:
-        bot.send_document(message.chat.id, f)
-
-    # Удаление временных файлов
-    os.remove(temp_docx_file)
-    os.remove(pdf_file)
+        # Отправка docx файла пользователю
+        with open(docx_file, 'rb') as f:
+            bot.send_document(message.chat.id, f)
+    except Exception as e:
+        # Обработка ошибок при генерации docx
+        bot.send_message(message.chat.id, f"Ошибка при генерации документа: {str(e)}")
+    finally:
+        # Удаление временного файла
+        if os.path.exists(docx_file):
+            os.remove(docx_file)

@@ -1,15 +1,16 @@
 
 import gspread
+from gspread import Cell
 from oauth2client.service_account import ServiceAccountCredentials
 import os
-import time
+import sys
 import json
 import pickle
 import datetime
 import requests
 from bs4 import BeautifulSoup
-from telebot import types
 import config
+from tqdm import tqdm
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 with open(os.path.join(dir_path, 'creds.json'), 'r') as f:
@@ -279,9 +280,92 @@ def search_items(bot, search_query, search_type, chat_id) -> str:
             return "Уменьши размер поиска или используй артикул"
     except Exception as e:
         return None
+# Если нужно из сайта цифры узнать
+def send_data(bot, message):
+    search_query = message.text # получаем текст сообщения от пользователя
+    for word in config.SITE_TRIGGERS: # для каждого слова в словаре
+        search_query = search_query.replace (word, "")
+    
+    base_urls = [ # список базовых url для трех городов
+    "https://hatiko.ru",
+    "https://voronezh.hatiko.ru",
+    "https://lipetsk.hatiko.ru"
+]
+    urls = [ # список url для трех городов
+        f"https://hatiko.ru/search/?query={search_query}",
+        f"https://voronezh.hatiko.ru/search/?query={search_query}",
+        f"https://lipetsk.hatiko.ru/search/?query={search_query}"
+    ]
+    data = [] # список для хранения данных
+    for url in urls: # для каждого url
+        response = requests.get(url) # делаем запрос
+        soup = BeautifulSoup(response.text, "html.parser") # парсим html
+        product = soup.find("a", class_="s-product-header") # находим элемент с заголовком и ссылкой
+        if product: # если такой элемент есть
+            title = product["title"] # получаем заголовок
+            link = product["href"] # получаем ссылку
+            price = soup.find("span", class_="price").text.replace(" ", "") # находим элемент с ценой и убираем пробел
+            data.append((title, price, link)) # добавляем кортеж с данными в список
+        else: # если такого элемента нет
+            data.append(("Нет данных", "Нет данных", "Нет данных")) # добавляем кортеж с пустыми данными в список
+    # формируем сообщение с данными
+    for i in range(len(data)): # для каждого элемента в списке данных
+        data[i] = (data[i][0], data[i][1], base_urls[i] + data[i][2]) # заменяем относительный url на абсолютный url, соединяя базовый url с относительным url
+    message_text = f"🧭 {data[0][0]}\n" # заголовок одинаковый для всех городов, берем первый элемент
+    message_text += f"🪙🆂 {data[0][1]}\n" # цена для Саратова
+    message_text += f"🪙🆅 {data[1][1]}\n" # цена для Воронежа
+    message_text += f"🪙🅻 {data[2][1]}\n\n" # цена для Липецка
+    message_text += f"🌐🆂: {data[0][2]}\n" # ссылка для Саратова
+    message_text += f"🌐🆅: {data[1][2]}\n" # ссылка для Воронежа
+    message_text += f"🌐🅻: {data[2][2]}" # ссылка для Липецка
+    bot.send_message(message.chat.id, message_text) # отправляем сообщение пользователю
 
+# Определяем функцию для работы с Google таблицей
+def priceup():
+    
+    # Создаем объект для работы с Google таблицами
+    gc = gspread.authorize(creds)
 
+    # Открываем Google таблицу по ссылке
+    sheet = gc.open_by_url('https://docs.google.com/spreadsheets/d/188SpsRwhxfcf5MSD6Xtp67gZT016dw0Qp8rc4Gbysqw/edit#gid=211225988')
 
+    # Выбираем первый лист в таблице
+    worksheet = sheet.worksheet("QUERY")
+
+    # Получаем все значения из столбца I
+    values = worksheet.col_values(9)
+
+    # Создаем словарь для хранения пар значений и цен
+    dictionary = {}
+
+    # Проходим по всем значениям в столбце I, начиная со второй строки
+    # Проходим по всем значениям в столбце I, начиная со второй строки, обернув их в функцию tqdm
+    # Указываем, что хотим выводить индикатор прогресса в стандартный поток вывода sys.stdout
+    for value in tqdm(values[1:], file=sys.stdout):
+        # Если значение не пустое и больше или равно 6000
+        if value and int(value) >= 6000:
+            # Формируем поисковый запрос на сайте hatiko.ru
+            search_query = f'https://hatiko.ru/search/?query={value}'
+            # Получаем цену с помощью функции get_price
+            price = get_price(search_query)
+            # Добавляем пару значение-цена в словарь
+            dictionary[value] = price
+
+    # Создаем пустой список для хранения объектов Cell
+    cells = []
+
+    # Проходим по всем парам в словаре
+    for key, value in dictionary.items():
+        # Находим индекс значения в столбце I
+        index = values.index(key)
+        # Создаем объект Cell с координатами в столбце J и значением из словаря
+        cell = gspread.Cell(row=index + 1, col=10, value=value)
+        # Добавляем объект Cell в список
+        cells.append(cell)
+
+    # Обновляем все ячейки в столбце J одним запросом
+    worksheet.update_cells(cells)
+    
 # Запрос ввода от пользователя
 # search_query = input("Введите поисковой запрос: ")
 
