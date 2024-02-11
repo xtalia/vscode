@@ -4,7 +4,6 @@ from gspread import Cell
 from oauth2client.service_account import ServiceAccountCredentials
 import os
 import sys
-import json
 import pickle
 import datetime
 import requests
@@ -135,8 +134,9 @@ for i in range(len(column_a_prices)):
     price_sar = column_d_prices[i]
     price_lip = column_e_prices[i]
     price_vor = column_f_prices[i]
-    stock = column_g_prices[i]
-    status = column_h_prices[i]
+    price_bal = column_g_prices[i]
+    stock = column_h_prices[i]
+    status = column_i_prices[i]
 
     if stock not in exclude:
         if item_id in prices_dict:
@@ -148,6 +148,7 @@ for i in range(len(column_a_prices)):
                 'price_sar': price_sar,
                 'price_lip': price_lip,
                 'price_vor': price_vor,
+                'price_bal' : price_bal,
                 'stock': [stock][1:],
                 'status': status
             }
@@ -233,6 +234,10 @@ def compare_prices(item_info, search_query):
         '🅻': {
             'url': f'https://lipetsk.hatiko.ru/search/?query={search_query}',
             'price_key': 'price_lip'
+        },
+        '🗿': {
+            'url': f'https://balakovo.hatiko.ru/search/?query={search_query}',
+            'price_key': 'price_bal'
         }
     }
     
@@ -290,12 +295,14 @@ def send_data(bot, message):
     base_urls = [ # список базовых url для трех городов
     "https://hatiko.ru",
     "https://voronezh.hatiko.ru",
-    "https://lipetsk.hatiko.ru"
+    "https://lipetsk.hatiko.ru",
+    "https://balakovo.hatiko.ru"
 ]
     urls = [ # список url для трех городов
         f"https://hatiko.ru/search/?query={search_query}",
         f"https://voronezh.hatiko.ru/search/?query={search_query}",
-        f"https://lipetsk.hatiko.ru/search/?query={search_query}"
+        f"https://lipetsk.hatiko.ru/search/?query={search_query}",
+        f"https://balakovo.hatiko.ru/search/?query={search_query}"
     ]
     data = [] # список для хранения данных
     for url in urls: # для каждого url
@@ -315,10 +322,12 @@ def send_data(bot, message):
     message_text = f"🧭 {data[0][0]}\n" # заголовок одинаковый для всех городов, берем первый элемент
     message_text += f"🪙🆂 {data[0][1]}\n" # цена для Саратова
     message_text += f"🪙🆅 {data[1][1]}\n" # цена для Воронежа
-    message_text += f"🪙🅻 {data[2][1]}\n\n" # цена для Липецка
+    message_text += f"🪙🅻 {data[2][1]}\n" # цена для Липецка
+    message_text += f"🪙🗿 {data[3][1]}\n\n" # цена для Bal
     message_text += f"🌐🆂: {data[0][2]}\n" # ссылка для Саратова
     message_text += f"🌐🆅: {data[1][2]}\n" # ссылка для Воронежа
     message_text += f"🌐🅻: {data[2][2]}" # ссылка для Липецка
+    message_text += f"🌐🗿: {data[3][2]}" # ссылка для Bal
     bot.send_message(message.chat.id, message_text) # отправляем сообщение пользователю
 
 # Определяем функцию для работы с Google таблицей
