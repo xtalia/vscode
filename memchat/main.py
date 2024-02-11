@@ -243,6 +243,7 @@ def handle_config_file(message):
         bot.send_message(message.chat.id, "Файл должен быть одним из допустимых модулей Python.")
 
 
+
 #### Если текст не соответствует ни одному варианту, то запускается основной скрипт
 @bot.message_handler(content_types=['text'])
 def handle_message(message):
@@ -268,3 +269,7 @@ def handle_message(message):
 
 if __name__ == '__main__':
     main()
+    
+
+
+

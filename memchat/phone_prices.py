@@ -2,6 +2,7 @@ from telebot import types
 import re
 
 class PhonePrices:
+
     def __init__(self, sheet_url, client):
         # Initialize instance variables
         self.sheet_url = sheet_url
@@ -151,3 +152,4 @@ class PhonePrices:
         response += f"* Цена в Трейдин: до {total_price:.0f} рублей\n"
         response += f"*На что повлияла цена:\n {options}\n*Если состояние неудовлетворительное,\nто уточни у сервисных менеджеров"
         bot.send_message(message.chat.id,response)
+        
