@@ -5,10 +5,10 @@ def process_cash_amount(message, bot):
 
         # Расчет по карте, рассрочку, кредиту, кешбеку
         # qr_price = round(cash * 1.015, -2)  - 10
-        qr_price = round(cash * 1.01501, -1)
-        card_price = round(cash * 1.0301, -1)
-        rassrochka_price = round(cash * 1.0801, -1)
-        credit_price = round(cash * 1.0301, -1)
+        qr_price = round(cash * 1.01501, -2) -10
+        card_price = round(cash * 1.0301, -2) -10
+        rassrochka_price = round(cash * 1.0701, -2) -10
+        credit_price = round(cash * 1.1801, -2) -10
         cashback_amount = round(cash * 0.01)
 
         # Оформление сообщения
@@ -17,9 +17,9 @@ def process_cash_amount(message, bot):
         output += "* по карте = {:.0f} рублей\n\n".format(card_price)
         output += "** в рассрочку = {:.0f} рублей (от {:.0f} руб. на 6 месяцев)\n".format(rassrochka_price, rassrochka_price / 6)
         output += "** в кредит = {:.0f} рублей + % Банка".format(credit_price)
-        # 20% годовых на 18 мес = 30% | 40 годовых на 18 = 60%
-        output += "(от {:.0f} - {:.0f} руб. сроком до 18 месяцев)\n".format(credit_price * 1.30 / 18, credit_price * 1.60 / 18)
-        output += "** %Банка ~ от 20 до 40% годовых\n"
+        # 20% годовых на 36 мес = 60% | 40 годовых на 36 = 120%
+        output += "(от {:.0f} - {:.0f} руб. сроком до 36 месяцев)\n".format(credit_price * 1.60 / 36, credit_price * 2.2 / 36)
+        output += "** %Банка ~ от 20 до 40% годовых (точные условия может предоставить только менеджер)\n"
         output += "Кешбек = {:.0f} внутренними рублями\n (через 2 недели, если закажете самостоятельно на сайте)".format(cashback_amount)
 
         # Вывод пользователю

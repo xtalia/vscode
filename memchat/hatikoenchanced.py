@@ -376,13 +376,3 @@ def priceup():
     # Обновляем все ячейки в столбце J одним запросом
     worksheet.update_cells(cells)
     
-# Запрос ввода от пользователя
-# search_query = input("Введите поисковой запрос: ")
-
-# if search_query.isdigit():
-#    search_by_vendor_code(search_query)
-# else:
-#    search_by_item_name(search_query)
-
-
-    
