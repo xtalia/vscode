@@ -248,7 +248,7 @@ def compare_prices(item_info, search_query):
         threshold = 0.2  # 20% threshold
 
         if external_price is not None and price_difference > threshold * price:
-            message += f'🤯💱 проверь в мс (💰 {price} \ 🌐 {external_price})\n'
+            message += f'🤯💱 проверь в мс (💰 {price} / 🌐 {external_price})\n'
         elif external_price != price:
             message += f'🌐＄ {site}: {external_price}\n'
         else:

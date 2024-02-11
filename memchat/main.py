@@ -192,13 +192,6 @@ def handle_classifier_command(message):
 @bot.message_handler(func=lambda message: message.text.lower() in config.GENPDF_TRIGGERS)
 def handle_generate_pdf(message):  
     genpdf.start_survey(bot, message)
-    
-# @bot.message_handler(func=lambda message: message.text.lower() in config.PRICEUP_TRIGGERS)
-# def handle_priceup(message):  
-#     thread = threading.Thread(target=priceup)
-#     thread.start()
-#     thread.join()
-#     bot.send_message(message.chat.id, "Готово. Проверяй")
 
 ### Обработчики команд
 @bot.message_handler(commands=['restart'])

@@ -21,7 +21,7 @@ try:
     with open(os.path.join(dir_path, 'config.json'), 'r') as f:
         config_data = json.load(f)
 except:
-    config_data = ['bot','6057005343:AAHWzzPQ-IshPv_Z5y4uPKuHWE160TqpaeM']
+    config_data = ""
 
 
 GRANTED = ['184944023', '348971882', '587612412', '529194639', '540312' ,'6212781520','6672281848']
