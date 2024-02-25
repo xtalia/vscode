@@ -1,6 +1,7 @@
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from datetime import datetime, timedelta
 import config 
+import streamlit as st
 
 WW_LINK = config.WW_LINK
 WW_PLACES = config.WW_PLACES

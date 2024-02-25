@@ -268,6 +268,7 @@ def handle_message(message):
         bot.send_message(message.chat.id, f"В доступе отказано. Сообщите ваш ID {message.from_user.id} Сергею, чтобы он вас добавил")
 
 if __name__ == '__main__':
+    
     main()
     
 

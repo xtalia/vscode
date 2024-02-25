@@ -7,3 +7,4 @@ lxml>=4.9.0
 python-docx
 docx2pdf
 num2words
+streamlit
