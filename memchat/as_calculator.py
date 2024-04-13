@@ -9,8 +9,8 @@ def process_cash_amount(message, bot):
         # send_debug_message(f"{message.from_user.id} запросил Калькулятор")
         cash = float(message.text.strip())
         
-        qr_price = round(cash * 1.01501, -2) -10
-        card_price = round(cash * 1.0301, -2) -10
+        qr_price = round(cash * 1.0401, -2) -10
+        card_price = round(cash * 1.0501, -2) -10
         rassrochka_price_six = round(cash * 1.0701, -2) -10
         rassrochka_price_ten = round(cash * 1.101, -2) -10
         credit_price = round(cash * 1.1801, -2) -10
@@ -81,8 +81,8 @@ def cash_amount():
         credit_month = int(st.slider("Срок кредитования", 1,36,value=36))
         # Расчет по карте, рассрочку, кредиту, кешбеку
         # qr_price = round(cash * 1.015, -2)  - 10
-        qr_price = round(cash * 1.01501, -2) -10
-        card_price = round(cash * 1.0301, -2) -10
+        qr_price = round(cash * 1.0401, -2) -10
+        card_price = round(cash * 1.0501, -2) -10
         rassrochka_price_six = round(cash * 1.0701, -2) -10
         rassrochka_price_ten = round(cash * 1.101, -2) -10
         
