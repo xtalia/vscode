@@ -1,10 +1,9 @@
 import streamlit as st
 import index
-from as_calculator import cash_amount, original_price
+from as_calculator import *
 from avitoplag import find_models
 import os
 import config as cf
-
 
 st.set_page_config(
     page_title="Мемный Чат",
@@ -18,16 +17,29 @@ st.header('Мемный Чат', divider='violet')
 st.header('_Streamlit_ is :blue[cool] :sunglasses:')
 
 # Создаем три вкладки: Анализ данных, Визуализация и Машинное обучение
-tab1, tab2, tab3 = st.tabs(["Трейдин", "Калькуляторы", "Avito Классификатор"])
+tab1, tab2, tab3, tab4 = st.tabs(["Трейдин", "Калькуляторы", "Avito Классификатор","ddd"])
 
 # В первой вкладке вызываем функцию из модуля tab1
 with tab1:
     index.analyze_data()
 
 with tab2:
-    cash_amount()
+    st.subheader("Калькулятор карты, кредита, кешбека")
+    cash = float(st.text_input("Введите сумму наличными:", value=228))
+    credit_month = int(st.slider("Срок кредитования", 1,36,value=36))
+    output = cash_amount(cash,credit_month)
+    st.code(output)
+
     st.divider()
-    original_price()
+
+    st.subheader("Калькулятор скидки для мс")
+    original = float(st.text_input("Введите изначальную цену:", value=228))
+    discount = float(st.text_input("Введите сумму скидки:", value=228))
+
+    if st.button("Посчитать"):
+        result = process_discount(original,discount)
+        st.code(result)
+    
     
 with tab3:
     # Вызываем функцию find_models с нужными аргументами и получаем результат

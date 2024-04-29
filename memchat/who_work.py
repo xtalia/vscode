@@ -2,6 +2,8 @@ from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from datetime import datetime, timedelta
 import config 
 import streamlit as st
+from oauth2client.service_account import ServiceAccountCredentials
+import gspread
 
 WW_LINK = config.WW_LINK
 WW_PLACES = config.WW_PLACES
@@ -16,7 +18,12 @@ def who_work(bot, message):
     # Send the message with the inline keyboard markup
     bot.send_message(chat_id=message.chat.id, text='Хочешь узнать, кто работает?\nВыберите день:', reply_markup=keyboard)
 
-def ww_callback_query(bot, call, client):
+def ww_callback_query(bot, call):
+    cred_json = config.cred_json
+    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive','https://www.googleapis.com/auth/spreadsheets']
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(cred_json, scope)
+    client = gspread.authorize(creds)
+    
     # Define the day offset and text based on the callback data
     day_offset = 0 if call.data == 'today' else 1
     day_text = 'Сегодня' if day_offset == 0 else 'Завтра'

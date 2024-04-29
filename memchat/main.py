@@ -8,17 +8,12 @@ import traceback
 import threading
 
 # Импорты заморских
-import gspread
 import telebot
 from telebot import types
-from oauth2client.service_account import ServiceAccountCredentials
-# from google.colab import drive # GC
-
 
 import config
-import as_calculator
+from as_calculator import cash_amount, process_discount
 import megacalculator
-import phone_prices
 import who_work
 from sn_cutter import sn_cutter
 from usd_rate import handle_usd_rate
@@ -49,24 +44,12 @@ keyboard = telebot.types.ReplyKeyboardMarkup(row_width=2)
 keyboard.add(
     telebot.types.KeyboardButton("Калькулятор"),
     telebot.types.KeyboardButton("Скидка"),
-    telebot.types.KeyboardButton("Трейдин"),
     telebot.types.KeyboardButton("ТрейдинДок"),
     telebot.types.KeyboardButton("Кто работает"),
     telebot.types.KeyboardButton("Курс доллара")
 )
 
 continue_iteration = False
-
-# Для авторизации к гугл-таблицам
-scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive',
-         'https://www.googleapis.com/auth/spreadsheets']
-creds = ServiceAccountCredentials.from_json_keyfile_dict(cred_json, scope)
-client = gspread.authorize(creds)
-
-user_data = {}
-sheet_url = "https://docs.google.com/spreadsheets/d/1ccfJRBEUib2eO58xhnGAu6T_VbfMCtVtTqRASZdqPn8/edit#gid=1724589221"
-phone_prices_obj = phone_prices.PhonePrices(sheet_url, client)
-###
 
 # Функции
 
@@ -78,7 +61,6 @@ def handle_exception(e):
 
 
 def main():
-    # send_debug_message(DEBUG_LVL)
     while True:
         try:
             bot.polling(none_stop=True, interval=0)
@@ -95,20 +77,10 @@ def contact_us(message):
 ## Тестовая функция для обкатки
 def test_table(message):
     global DEBUG_LVL
-    # send_debug_message(f"Переключаем на внутреннюю отладку")
     if DEBUG_LVL:
         DEBUG_LVL = False
     else:
         DEBUG_LVL = True
-        # send_debug_message("Переключаем на внешнюю отладку")
-        # send_debug_message(f"DEBUG_LVL: {DEBUG_LVL}")
-
-
-# В мечтах:
-# def memchat_zakaz - если цена изменилась и нужно отправить запрос складу
-# ms_invoker - создание черновика заказа + отгрузки + ПКО/Вхплатежа через бота (без проводки)
-# ms_sn_seeker - поиск товара по серийнику или чтобы давал линк
-# ms_antibot - чтобы парсил цену с сайта и мс
 
 # Запуск бота с кнопками
 
@@ -130,14 +102,26 @@ def handle_contact_us(message):  # Контактус
     contact_us(message)
 
 ## Калькулятор по карте, рассрочке-кредиту и кешбека, скидка
+
+def discount_price(message):
+    try:
+        original_price = float(message.text)
+        bot.send_message(message.chat.id, "Введите скидку:")
+        bot.register_next_step_handler(message, lambda msg: bot.send_message(chat_id=msg.chat.id, text=process_discount(original_price,float(msg.text))))
+    except:
+        bot.send_message(message.chat.id, "Что-то пошло не так, используй цифры")
+    
+
 @bot.message_handler(func=lambda message: message.text.lower() in config.CALCULATE_TRIGGERS)
 def calculate_prices(message):  # Запуск калькулятора
     if message.text.lower() in ["скидка", "crblrf", '/discount']:
         bot.send_message(chat_id=message.chat.id, text="Сумма без скидки:")
-        bot.register_next_step_handler(message, lambda msg: as_calculator.process_original_price(msg, bot))
+        bot.register_next_step_handler(message, lambda msg: discount_price(msg))
     else:
-        bot.send_message(chat_id=message.chat.id, text="Сколько за наличные:")    
-        bot.register_next_step_handler(message, as_calculator.process_cash_amount, bot)
+        bot.send_message(chat_id=message.chat.id, text="Сколько за наличные:")
+        bot.register_next_step_handler(message, lambda msg: bot.send_message(chat_id=msg.chat.id, text=cash_amount(float(msg.text))))
+
+
 
 ## Обрезчик S у серийников
 @bot.message_handler(func=lambda message: message.text.lower() in config.SN_TRIGGERS)
@@ -146,22 +130,6 @@ def handle_serial_number_cutter(message):
     # регистрируем следующий обработчик для ответа пользователя
     bot.register_next_step_handler(message, lambda msg: sn_cutter(msg, bot))
 
-## Трейдин опросник
-@bot.message_handler(func=lambda message: message.text.lower() in config.TRADEIN_TRIGGERS)
-def handle_tradein(message):
-    phone_prices_obj.handle_tradein(bot, message)
-
-
-@bot.callback_query_handler(func=lambda call: "model:" in call.data)
-def handle_model_callback(call):
-    phone_prices_obj.handle_model_callback(bot, call)
-
-
-@bot.callback_query_handler(func=lambda call: "memory:" in call.data)
-def handle_memory_callback(call):
-    phone_prices_obj.handle_memory_callback(bot, call)
-
-
 ## Кто работает сегодня или завтра
 @bot.message_handler(func=lambda message: message.text.lower() in config.WW_TRIGGERS)
 def handle_who_work(message):
@@ -169,7 +137,7 @@ def handle_who_work(message):
 
 @bot.callback_query_handler(func=lambda call: call.data in ['today', 'tomorrow'])
 def handle_ww_callback_query(call):
-    who_work.ww_callback_query(bot, call, client)
+    who_work.ww_callback_query(bot, call)
 
 ## Запуск мегакалькулятора
 @bot.message_handler(func=lambda message: message.text.lower() in config.MEGACALC_TRIGGERS)
@@ -270,7 +238,3 @@ def handle_message(message):
 if __name__ == '__main__':
     
     main()
-    
-
-
-
