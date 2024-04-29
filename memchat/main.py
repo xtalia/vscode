@@ -101,17 +101,10 @@ def handle_test(message):  # Выполнение тестовой функци�
 def handle_contact_us(message):  # Контактус
     contact_us(message)
 
+
+
+### FUNC
 ## Калькулятор по карте, рассрочке-кредиту и кешбека, скидка
-
-def discount_price(message):
-    try:
-        original_price = float(message.text)
-        bot.send_message(message.chat.id, "Введите скидку:")
-        bot.register_next_step_handler(message, lambda msg: bot.send_message(chat_id=msg.chat.id, text=process_discount(original_price,float(msg.text))))
-    except:
-        bot.send_message(message.chat.id, "Что-то пошло не так, используй цифры")
-    
-
 @bot.message_handler(func=lambda message: message.text.lower() in config.CALCULATE_TRIGGERS)
 def calculate_prices(message):  # Запуск калькулятора
     if message.text.lower() in ["скидка", "crblrf", '/discount']:
@@ -121,6 +114,13 @@ def calculate_prices(message):  # Запуск калькулятора
         bot.send_message(chat_id=message.chat.id, text="Сколько за наличные:")
         bot.register_next_step_handler(message, lambda msg: bot.send_message(chat_id=msg.chat.id, text=cash_amount(float(msg.text))))
 
+def discount_price(message):
+    try:
+        original_price = float(message.text)
+        bot.send_message(message.chat.id, "Введите скидку:")
+        bot.register_next_step_handler(message, lambda msg: bot.send_message(chat_id=msg.chat.id, text=process_discount(original_price,float(msg.text))))
+    except:
+        bot.send_message(message.chat.id, "Что-то пошло не так, используй цифры")
 
 
 ## Обрезчик S у серийников

@@ -1,7 +1,7 @@
 import streamlit as st
 from wr_tradein import wr_tn
 from as_calculator import *
-from avitoplag import find_models
+from wr_avitoplag import find_models
 import os
 import config as cf
 
