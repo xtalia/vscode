@@ -5,22 +5,15 @@ import config as cf
 import tradeinloader
 
 
-
-# Загружаем файл с данными
-with open(os.path.join(cf.dir_path, 'data.json'), 'r') as f:
-    data = json.load(f)
-
-# Получаем список моделей из ключей словаря
-models = list(data.keys())
-
-
-
 # Создаем функцию для анализа данных
-def analyze_data():
+def wr_tn():
+    # Загружаем файл с данными
+    with open(os.path.join(cf.dir_path, 'data.json'), 'r') as f:
+        data = json.load(f)
 
+    # Получаем список моделей из ключей словаря
+    models = list(data.keys())
     result = ""
-    
-
     
     # Позволяем пользователю выбрать модель из выпадающего списка
     model = st.selectbox("Выберите модель", models) 

@@ -1,5 +1,5 @@
 import streamlit as st
-import index
+from wr_tradein import wr_tn
 from as_calculator import *
 from avitoplag import find_models
 import os
@@ -21,7 +21,7 @@ tab1, tab2, tab3, tab4 = st.tabs(["Трейдин", "Калькуляторы", 
 
 # В первой вкладке вызываем функцию из модуля tab1
 with tab1:
-    index.analyze_data()
+    wr_tn()
 
 with tab2:
     st.subheader("Калькулятор карты, кредита, кешбека")
