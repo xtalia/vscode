@@ -13,17 +13,18 @@ st.set_page_config(
 )
 
 
+
 st.header('Мемный Чат', divider='violet')
 st.header('_Streamlit_ is :blue[cool] :sunglasses:')
 
 # Создаем три вкладки: Анализ данных, Визуализация и Машинное обучение
-tab1, tab2, tab3, tab4 = st.tabs(["Трейдин", "Калькуляторы", "Avito Классификатор","ddd"])
+tab = st.tabs(["Трейдин", "Калькуляторы", "Avito Классификатор","ddd"])
 
 # В первой вкладке вызываем функцию из модуля tab1
-with tab1:
+with tab[0]:
     wr_tn()
 
-with tab2:
+with tab[1]:
     st.subheader("Калькулятор карты, кредита, кешбека")
     cash = float(st.text_input("Введите сумму наличными:", value=228))
     credit_month = int(st.slider("Срок кредитования", 1,36,value=36))
@@ -41,7 +42,7 @@ with tab2:
         st.code(result)
     
     
-with tab3:
+with tab[2]:
     # Вызываем функцию find_models с нужными аргументами и получаем результат
     model = st.text_input("Введите модель (например 15 Pro)", value="15 pro")
     found_models = find_models(os.path.join(cf.dir_path, 'phones.xml'), model)
@@ -55,3 +56,6 @@ with tab3:
     else:
         # Выводим сообщение, что модели не найдены
         st.write("Модели не найдены")
+        
+with tab[3]:
+    pass

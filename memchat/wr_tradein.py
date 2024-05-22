@@ -8,6 +8,7 @@ import tradeinloader
 # Создаем функцию для анализа данных
 def wr_tn():
     # Загружаем файл с данными
+    
     with open(os.path.join(cf.dir_path, 'data.json'), 'r') as f:
         data = json.load(f)
 
