@@ -6,7 +6,7 @@
         header.style.cssText = 'display: flex; justify-content: space-between; align-items: center;';
 
         const title = document.createElement('span');
-        title.textContent = 'Calculator';
+        title.textContent = 'Калькулятор 0.2';
         header.appendChild(title);
 
         const toggleButton = document.createElement('button');
