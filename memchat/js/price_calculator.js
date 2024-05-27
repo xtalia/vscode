@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Price Calculator
-// @namespace    http://tampermonkey.net/
+// @namespace    https://github.com/xtalia/vscode/blob/main/memchat/js/price_calculator.js
 // @version      1.2
 // @description  Добавляет окошко для расчета цен с возможностью сворачивания и вывода результатов в текстовое поле
 // @author       Serg
