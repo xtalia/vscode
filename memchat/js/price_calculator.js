@@ -1,61 +1,89 @@
-// ==UserScript==
-// @name         Price Calculator
-// @namespace    http://tampermonkey.net/
-// @version      1.1
-// @description  Добавляет окошко для расчета цен с возможностью сворачивания и вывода результатов в текстовое поле
-// @author       Serg
-// @match        https://online.moysklad.ru/*
-// @grant        none
-// ==/UserScript==
-
+// price_calculator.js
 (function() {
     'use strict';
 
     function createCalculator() {
         const container = document.createElement('div');
-        container.style.cssText = 'position: fixed; bottom: 10px; right: 10px; width: 300px; background-color: #f9f9f9; border: 1px solid #ccc; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); padding: 10px; z-index: 1000;';
+        container.style.position = 'fixed';
+        container.style.bottom = '10px';
+        container.style.right = '10px';
+        container.style.width = '300px';
+        container.style.backgroundColor = '#f9f9f9';
+        container.style.border = '1px solid #ccc';
+        container.style.borderRadius = '5px';
+        container.style.boxShadow = '0 0 10px rgba(0, 0, 0, 0.1)';
+        container.style.padding = '10px';
+        container.style.zIndex = '1000';
 
         const header = document.createElement('div');
-        header.style.cssText = 'display: flex; justify-content: space-between; align-items: center;';
+        header.style.display = 'flex';
+        header.style.justifyContent = 'space-between';
+        header.style.alignItems = 'center';
 
         const title = document.createElement('span');
-        title.textContent = 'Calculator';
+        title.innerText = 'Calculator';
         header.appendChild(title);
 
         const toggleButton = document.createElement('button');
-        toggleButton.textContent = '-';
-        toggleButton.style.cssText = 'background-color: transparent; border: none; cursor: pointer;';
+        toggleButton.innerText = '-';
+        toggleButton.style.backgroundColor = 'transparent';
+        toggleButton.style.border = 'none';
+        toggleButton.style.cursor = 'pointer';
         toggleButton.addEventListener('click', () => {
-            content.style.display = content.style.display === 'none' ? 'block' : 'none';
-            toggleButton.textContent = content.style.display === 'none' ? '+' : '-';
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                toggleButton.innerText = '-';
+            } else {
+                content.style.display = 'none';
+                toggleButton.innerText = '+';
+            }
         });
         header.appendChild(toggleButton);
 
         container.appendChild(header);
 
         const content = document.createElement('div');
-        content.style.display = 'block';
 
-        const cashInput = createInputElement('number', 'Введите сумму');
+        const cashInput = document.createElement('input');
+        cashInput.type = 'number';
+        cashInput.placeholder = 'Enter cash amount';
+        cashInput.style.width = '100%';
+        cashInput.style.marginBottom = '10px';
         content.appendChild(cashInput);
 
-        const modeSelect = createSelectElement([
-            { value: 'all', text: 'Для всех' },
-            { value: 'balakovo', text: 'Для Балаково' }
-        ]);
+        const modeSelect = document.createElement('select');
+        const optionAll = document.createElement('option');
+        optionAll.value = 'all';
+        optionAll.innerText = 'Для всех';
+        modeSelect.appendChild(optionAll);
+        const optionBalakovo = document.createElement('option');
+        optionBalakovo.value = 'balakovo';
+        optionBalakovo.innerText = 'Для Балаково';
+        modeSelect.appendChild(optionBalakovo);
+        modeSelect.style.width = '100%';
+        modeSelect.style.marginBottom = '10px';
         content.appendChild(modeSelect);
 
-        const calculateButton = createButtonElement('Посчитать', () => calculate());
+        const calculateButton = document.createElement('button');
+        calculateButton.innerText = 'Посчитать';
+        calculateButton.style.width = '100%';
+        calculateButton.style.marginBottom = '10px';
         content.appendChild(calculateButton);
 
-        const resultField = createTextAreaElement('', 100);
+        const resultField = document.createElement('textarea');
+        resultField.style.width = '100%';
+        resultField.style.height = '100px';
+        resultField.style.marginBottom = '10px';
+        resultField.readOnly = true;
         content.appendChild(resultField);
 
-        function calculate() {
+        calculateButton.addEventListener('click', () => {
             const cash = parseFloat(cashInput.value);
             const mode = modeSelect.value;
             let qr_price, card_price, rassrochka_price_six, rassrochka_price_ten, credit_price, cashback_amount;
             let credit_month = 36;
+            let twenty = Math.round(credit_price * ((20/12/100) * (1 + (20/12/100)) ** credit_month) / ((1 + (20/12/100)) ** credit_month - 1), 0);
+            let fourty = Math.round(credit_price * ((40/12/100) * (1 + (40/12/100)) ** credit_month) / ((1 + (40/12/100)) ** credit_month - 1), 0);
 
             if (mode === 'all') {
                 qr_price = Math.round(cash * 1.0401 / 100) * 100 - 10;
@@ -73,66 +101,21 @@
                 cashback_amount = Math.round(cash * 0.01);
             }
 
-            const twenty = Math.round(credit_price * ((20 / 12 / 100) * (1 + (20 / 12 / 100)) ** credit_month) / (((1 + (20 / 12 / 100)) ** credit_month) - 1));
-            const forty = Math.round(credit_price * ((40 / 12 / 100) * (1 + (40 / 12 / 100)) ** credit_month) / (((1 + (40 / 12 / 100)) ** credit_month) - 1));
-
             resultField.value = `
-💵 Стоимость: ${cash} рублей с учетом скидки за оплату наличными
-📷 QR = ${qr_price} рублей
-💳 по карте = ${card_price} рублей
+Стоимость: ${cash} рублей с учетом скидки за оплату наличными
+QR = ${qr_price} рублей
+по карте = ${card_price} рублей
 
-️🏦 в рассрочку
-️🔹 ОТП = ${rassrochka_price_six} рублей (от ${Math.round(rassrochka_price_six / 6)} руб. на 6 месяцев)
-🔹 Другие банки = ${rassrochka_price_ten} рублей (от ${Math.round(rassrochka_price_ten / 10)} руб. на 10 месяцев)
+в рассрочку
+ОТП = ${rassrochka_price_six} рублей (от ${Math.round(rassrochka_price_six / 6)} руб. на 6 месяцев)
+Другие банки = ${rassrochka_price_ten} рублей (от ${Math.round(rassrochka_price_ten / 10)} руб. на 10 месяцев)
 
-🏛 в кредит = ${credit_price} + процент Банка
-от ${twenty} - ${forty} руб. сроком до ${credit_month} месяцев)
+в кредит = ${credit_price} + процент Банка
+от ${twenty} - ${fourty} руб. сроком до ${credit_month} месяцев)
 ** %Банка ~ от 20 до 40% годовых (точные условия может предоставить только менеджер)
-💸 Кешбек = ${cashback_amount} внутренними баллами
-`.trim();
-        }
-
-        function createInputElement(type, placeholder) {
-            const input = document.createElement('input');
-            input.type = type;
-            input.placeholder = placeholder;
-            input.style.width = '100%';
-            input.style.marginBottom = '10px';
-            return input;
-        }
-
-        function createSelectElement(options) {
-            const select = document.createElement('select');
-            select.style.width = '100%';
-            select.style.marginBottom = '10px';
-            options.forEach(option => {
-                const opt = document.createElement('option');
-                opt.value = option.value;
-                opt.textContent = option.text;
-                select.appendChild(opt);
-            });
-            return select;
-        }
-
-        function createButtonElement(text, clickHandler) {
-            const button = document.createElement('button');
-            button.textContent = text;
-            button.style.width = '100%';
-            button.style.marginBottom = '10px';
-            button.style.cursor = 'pointer';
-            button.addEventListener('click', clickHandler);
-            return button;
-        }
-
-        function createTextAreaElement(value, height) {
-            const textarea = document.createElement('textarea');
-            textarea.value = value;
-            textarea.style.width = '100%';
-            textarea.style.height = height + 'px';
-            textarea.style.marginBottom = '10px';
-            textarea.readOnly = true;
-            return textarea;
-        }
+Кешбек = ${cashback_amount} внутренними баллами
+            `;
+        });
 
         container.appendChild(content);
         document.body.appendChild(container);
