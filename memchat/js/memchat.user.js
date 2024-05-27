@@ -13,7 +13,7 @@
 
     GM_xmlhttpRequest({
         method: 'GET',
-        url: 'https://example.com/external-script.js',
+        url: 'https://github.com/xtalia/vscode/raw/main/memchat/js/ms_show_all.js',
         onload: function(response) {
             const script = document.createElement('script');
             script.textContent = response.responseText;
@@ -22,7 +22,7 @@
     });
     GM_xmlhttpRequest({
         method: 'GET',
-        url: 'https://example.com/external-script.js',
+        url: 'https://github.com/xtalia/vscode/raw/main/memchat/js/price_calculator.js',
         onload: function(response) {
             const script = document.createElement('script');
             script.textContent = response.responseText;
