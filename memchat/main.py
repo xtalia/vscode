@@ -130,14 +130,15 @@ def handle_serial_number_cutter(message):
     # регистрируем следующий обработчик для ответа пользователя
     bot.register_next_step_handler(message, lambda msg: sn_cutter(msg, bot))
 
-## Кто работает сегодня или завтра
+# Кто работает сегодня или завтра
 @bot.message_handler(func=lambda message: message.text.lower() in config.WW_TRIGGERS)
 def handle_who_work(message):
     who_work.who_work(bot, message)
 
 @bot.callback_query_handler(func=lambda call: call.data in ['today', 'tomorrow'])
 def handle_ww_callback_query(call):
-    who_work.ww_callback_query(bot, call)
+    text = who_work.get_employee_info(call.data)
+    bot.send_message(chat_id=call.message.chat.id, text=text)
 
 ## Запуск мегакалькулятора
 @bot.message_handler(func=lambda message: message.text.lower() in config.MEGACALC_TRIGGERS)

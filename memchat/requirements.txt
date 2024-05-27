@@ -8,4 +8,5 @@ python-docx
 docx2pdf
 num2words
 streamlit
-flask
+Flask
+FLask-CORS
