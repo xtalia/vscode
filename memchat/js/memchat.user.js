@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Мемный чат 1.6
+// @name         Мемный чат
 // @namespace    http://tampermonkey.net/
 // @version      1.6.1
 // @description  Набор скриптов
