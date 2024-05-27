@@ -4,7 +4,47 @@
         "url": "https://www.gsmarena.com/compare.php3"
     },
     {
+        "name": "Новости компании",
+        "url": "https://wiki.yandex.ru/homepage/novosti/"
+    },
+    {
         "name": "Контакты магазина",
         "url": "https://wiki.yandex.ru/homepage/numbers/"
+    },
+    {
+        "name": "Оформить продажу",
+        "url": "https://wiki.yandex.ru/homepage/rabochijj-den/prodazha/"
+    },
+    {
+        "name": "Оформить трейдин",
+        "url": "https://wiki.yandex.ru/homepage/rabochijj-den/trade-in/"
+    },
+    {
+        "name": "Перемещение товара",
+        "url": "https://wiki.yandex.ru/homepage/rabochijj-den/peremeshhenie-tovara/"
+    },
+    {
+        "name": "Инвентаризация",
+        "url": "https://wiki.yandex.ru/homepage/rabochijj-den/inventarizacija/"
+    },
+    {
+        "name": "Оформить возврат",
+        "url": "https://wiki.yandex.ru/homepage/rabochijj-den/zakazy/vozvrat/"
+    },
+    {
+        "name": "Оценка трейдин",
+        "url": "https://docs.google.com/spreadsheets/d/1ccfJRBEUib2eO58xhnGAu6T_VbfMCtVtTqRASZdqPn8/edit#gid=0"
+    },
+    {
+        "name": "Сайт Серга",
+        "url": "http://1721671-cu28683.twc1.net/"
+    },
+    {
+        "name": "Проверить активацию Apple",
+        "url": "https://checkcoverage.apple.com/"
+    },
+    {
+        "name": "Сравнить телефоны",
+        "url": "https://nanoreview.net/ru/phone-compare"
     }
 ]
