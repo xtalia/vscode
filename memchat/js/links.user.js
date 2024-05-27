@@ -2,8 +2,8 @@
 // @name         Полезные ссылки
 // @namespace    http://tampermonkey.net/
 // @version      1.0
-// @description  Выдвижная панель с полезными ссылками и кнопкой для обновления списка ссылок
-// @author       Serg
+// @description  Выдвижная панель с полезными ссылками и кнопкой для показа/скрытия
+// @author       Your Name
 // @match        https://online.moysklad.ru/*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_addStyle
@@ -12,58 +12,85 @@
 (function() {
     'use strict';
 
-    const panelWidth = 10; // Ширина выдвижной панели в пикселях
+    const panelWidth = 250; // Ширина выдвижной панели в пикселях
+    let panelVisible = false;
+
+    const showButton = document.createElement('button');
+    showButton.textContent = '🔗 Полезные ссылки';
+    showButton.style.cssText = `
+        position: fixed;
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-top-left-radius: 5px;
+        border-bottom-left-radius: 5px;
+        padding: 10px;
+        cursor: pointer;
+        z-index: 1000;
+    `;
+    showButton.addEventListener('click', () => {
+        togglePanel();
+    });
+    document.body.appendChild(showButton);
 
     const panel = document.createElement('div');
     panel.id = 'usefulLinksPanel';
     panel.style.cssText = `
         position: fixed;
-        top: 50%;
+        top: 0;
         right: 0;
-        transform: translateY(-50%);
         width: ${panelWidth}px;
+        height: 100%;
         background-color: #fff;
-        border-left: 1px solid #ccc;
         box-shadow: -1px 0 10px rgba(0, 0, 0, 0.1);
-        z-index: 1000;
-        transition: width 0.3s ease;
-        overflow: hidden;
+        z-index: 999;
+        transform: translateX(${panelWidth}px);
+        transition: transform 0.3s ease;
+        overflow-y: auto;
+        padding: 10px;
     `;
 
     const closeButton = document.createElement('button');
-    closeButton.textContent = '❌';
+    closeButton.textContent = '❌ Скрыть';
     closeButton.style.cssText = `
-        position: absolute;
-        top: 5px;
-        right: 5px;
-        background-color: transparent;
+        background-color: #dc3545;
+        color: #fff;
         border: none;
+        padding: 5px 10px;
         cursor: pointer;
+        margin-bottom: 10px;
     `;
     closeButton.addEventListener('click', () => {
-        panel.style.width = '0';
+        hidePanel();
     });
     panel.appendChild(closeButton);
 
     const linksContainer = document.createElement('div');
     panel.appendChild(linksContainer);
 
-    const refreshButton = document.createElement('button');
-    refreshButton.textContent = 'Обновить ссылки';
-    refreshButton.style.cssText = `
-        width: 100%;
-        padding: 10px;
-        background-color: #007bff;
-        color: #fff;
-        border: none;
-        cursor: pointer;
-    `;
-    refreshButton.addEventListener('click', () => {
-        updateLinks();
-    });
-    panel.appendChild(refreshButton);
+    function togglePanel() {
+        if (panelVisible) {
+            hidePanel();
+        } else {
+            showPanel();
+        }
+    }
 
-    function updateLinks() {
+    function showPanel() {
+        panel.style.transform = 'translateX(0)';
+        panelVisible = true;
+        fetchLinks();
+    }
+
+    function hidePanel() {
+        panel.style.transform = `translateX(${panelWidth}px)`;
+        panelVisible = false;
+    }
+
+    function fetchLinks() {
         GM_xmlhttpRequest({
             method: 'GET',
             url: 'https://raw.githubusercontent.com/xtalia/vscode/main/memchat/js/links.json',
@@ -105,20 +132,11 @@
         });
     }
 
-    // Initial load of links
-    updateLinks();
+    // Initial hide the panel
+    hidePanel();
 
     // Add panel to the document
     document.body.appendChild(panel);
-
-    // Hover to expand panel
-    panel.addEventListener('mouseenter', () => {
-        panel.style.width = '250px'; // Установите здесь нужную ширину панели при наведении
-    });
-
-    panel.addEventListener('mouseleave', () => {
-        panel.style.width = `${panelWidth}px`;
-    });
 
     // Add styles
     GM_addStyle(`
