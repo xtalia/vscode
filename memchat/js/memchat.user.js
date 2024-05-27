@@ -11,23 +11,20 @@
 (function() {
     'use strict';
 
-    GM_xmlhttpRequest({
-        method: 'GET',
-        url: 'https://github.com/xtalia/vscode/raw/main/memchat/js/ms_show_all.js',
-        onload: function(response) {
-            const script = document.createElement('script');
-            script.textContent = response.responseText;
-            document.head.appendChild(script);
-        }
-    });
-    GM_xmlhttpRequest({
-        method: 'GET',
-        url: 'https://github.com/xtalia/vscode/raw/main/memchat/js/price_calculator.js',
-        onload: function(response) {
-            const script = document.createElement('script');
-            script.textContent = response.responseText;
-            document.head.appendChild(script);
-        }
-    });
+    const scriptsToLoad = [
+        'https://github.com/xtalia/vscode/raw/main/memchat/js/price_calculator.js',
+        'https://github.com/xtalia/vscode/raw/main/memchat/js/ms_show_all.js'
+    ];
 
+    scriptsToLoad.forEach(url => {
+        GM_xmlhttpRequest({
+            method: 'GET',
+            url: url,
+            onload: function(response) {
+                const script = document.createElement('script');
+                script.textContent = response.responseText;
+                document.head.appendChild(script);
+            }
+        });
+    });
 })();
