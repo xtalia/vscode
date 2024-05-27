@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Мемный чат
 // @namespace    http://tampermonkey.net/
-// @version      1.6.1
+// @version      1.6.2
 // @description  Набор скриптов
 // @match        https://online.moysklad.ru/*
 // @grant        GM_xmlhttpRequest
@@ -15,7 +15,8 @@
     console.log('Main userscript loaded');
 
     const scriptsToLoad = [
-        'https://raw.githubusercontent.com/xtalia/vscode/main/memchat/js/price_calculator.js'
+        'https://raw.githubusercontent.com/xtalia/vscode/main/memchat/js/price_calculator.js',
+        'https://raw.githubusercontent.com/xtalia/vscode/main/memchat/js/links.user.js'
     ];
 
     function loadScripts() {
