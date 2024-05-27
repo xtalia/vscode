@@ -1,11 +1,12 @@
 // ==UserScript==
-// @name         Show All Tab Contents Button
+// @name         Show All Tab Contents Context Menu
 // @namespace    http://tampermonkey.net/
-// @version      1.2
-// @description  Добавляет кнопку для показа всех блоков с class="tab-content", убирая у них класс "hidden"
-// @author       Your Name
+// @version      1.3
+// @description  Добавляет пункт в контекстное меню для показа всех блоков с class="tab-content", убирая у них класс "hidden"
+// @author       Serg Sinist
 // @match        https://online.moysklad.ru/*
-// @grant        none
+// @grant        GM_registerMenuCommand
+// @grant        GM_addStyle
 // ==/UserScript==
 
 (function() {
@@ -19,28 +20,36 @@
         });
     }
 
-    // Создание кнопки
-    function createButton() {
-        const button = document.createElement('button');
-        button.innerText = 'Show All Tab Contents';
-        button.style.position = 'fixed';
-        button.style.top = '10px';
-        button.style.right = '10px';
-        button.style.zIndex = '1000';
-        button.style.padding = '10px';
-        button.style.backgroundColor = '#007bff';
-        button.style.color = '#fff';
-        button.style.border = 'none';
-        button.style.borderRadius = '5px';
-        button.style.cursor = 'pointer';
+    // Добавление стилей для контекстного меню
+    GM_addStyle(`
+        .gm-context-menu {
+            z-index: 1000;
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            cursor: pointer;
+        }
+    `);
 
-        button.addEventListener('click', showAllTabContents);
+    // Регистрация пункта в контекстном меню
+    GM_registerMenuCommand('Show All Tab Contents', showAllTabContents, 'S');
 
-        document.body.appendChild(button);
+    // Функция для создания контекстного меню
+    function createContextMenu() {
+        const contextMenu = document.createElement('div');
+        contextMenu.classList.add('gm-context-menu');
+        contextMenu.textContent = 'Show All Tab Contents';
+        contextMenu.addEventListener('click', showAllTabContents);
+        document.body.appendChild(contextMenu);
     }
 
-    // Запуск функции создания кнопки после полной загрузки страницы
+    // Запуск функции создания контекстного меню после полной загрузки страницы
     window.addEventListener('load', () => {
-        setTimeout(createButton, 3000); // Задержка в 3 секунды перед созданием кнопки
+        setTimeout(createContextMenu, 3000); // Задержка в 3 секунды перед созданием контекстного меню
     });
 })();
