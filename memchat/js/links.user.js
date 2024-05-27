@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Полезные ссылки
 // @namespace    http://tampermonkey.net/
-// @version      1.0
-// @description  Выдвижная панель с полезными ссылками и кнопкой для показа/скрытия
+// @version      1.1
+// @description  Выдвижная панель с полезными ссылками и кнопкой для показа/скрытия, а также обновления списка ссылок
 // @author       Your Name
 // @match        https://online.moysklad.ru/*
 // @grant        GM_xmlhttpRequest
@@ -68,6 +68,21 @@
     });
     panel.appendChild(closeButton);
 
+    const refreshButton = document.createElement('button');
+    refreshButton.textContent = '🔄 Обновить список';
+    refreshButton.style.cssText = `
+        background-color: #28a745;
+        color: #fff;
+        border: none;
+        padding: 5px 10px;
+        cursor: pointer;
+        margin-bottom: 10px;
+    `;
+    refreshButton.addEventListener('click', () => {
+        fetchLinks();
+    });
+    panel.appendChild(refreshButton);
+
     const linksContainer = document.createElement('div');
     panel.appendChild(linksContainer);
 
@@ -100,10 +115,12 @@
                     renderLinks(linksData);
                 } catch (error) {
                     console.error('Failed to parse links JSON', error);
+                    alert('Не удалось загрузить список ссылок. Попробуйте еще раз.');
                 }
             },
             onerror: function(error) {
                 console.error('Failed to load links JSON', error);
+                alert('Не удалось загрузить список ссылок. Попробуйте еще раз.');
             }
         });
     }
