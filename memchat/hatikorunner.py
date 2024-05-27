@@ -1,54 +1,52 @@
-import http.server
-import socketserver
-import urllib.parse as urlparse
-from hatikoenchanced import final_dict, print_item_info  # Импортируйте ваш модуль
+from flask import Flask, request, jsonify
+from oauth2client.service_account import ServiceAccountCredentials
+import gspread
+from datetime import datetime, timedelta
+import config  # Создайте config.py для хранения конфигурационных данных
 
-class MyRequestHandler(http.server.SimpleHTTPRequestHandler):
-    def do_GET(self):
-        parsed_path = urlparse.urlparse(self.path)
-        if parsed_path.path == '/search':
-            query = urlparse.parse_qs(parsed_path.query)
-            search_query = urlparse.parse_qs(parsed_path.query).get('search_query', [''])[0]
-            search_type = query.get('search_type', ['item_name'])[0]
+app = Flask(__name__)
 
-            count = 0
-            results = []
-            try:
-                for item_id, item_info in final_dict.items():
-                    if search_type == "vendor_code":
-                        if search_query == item_info["vendor_code"]:
-                            count += 1
-                            result = print_item_info(item_id, item_info)
-                            results.append(result)
-                    elif search_type == "item_name":
-                        if search_query.lower() in item_info["item_name"].lower():
-                            count += 1
-                            result = print_item_info(item_id, item_info)
-                            results.append(result)
+WW_LINK = config.WW_LINK
+WW_PLACES = config.WW_PLACES
 
-                    if count == 15:
-                        break
+def get_google_sheets_data(day_offset):
+    cred_json = config.cred_json
+    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/spreadsheets']
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(cred_json, scope)
+    client = gspread.authorize(creds)
 
-                if count < 15:
-                    results.append("Готово")
-                else:
-                    results.append("Уменьши размер поиска или используй артикул")
-            except Exception as e:
-                results.append("Error: " + str(e))
+    sheet = client.open_by_url(WW_LINK)
+    worksheet = sheet.get_worksheet(0)
 
-            self.send_response(200)
-            self.send_header('Content-type', 'text/plain; charset=utf-8')
-            self.end_headers()
-            self.wfile.write("\n".join(results).encode('utf-8'))
-        else:
-            self.send_response(404)
-            self.end_headers()
+    day = datetime.now().day + day_offset
 
-def run_server():
-    PORT = 25536  # Измените порт на другой при необходимости
-    with socketserver.TCPServer(("", PORT), MyRequestHandler) as httpd:
-        print(f"Serving on port {PORT}")
-        httpd.serve_forever()
+    values_a = worksheet.col_values(1)[3:]
+    values_b = worksheet.col_values(1 + day)[3:]
 
-if __name__ == "__main__":
-    run_server()
+    employee_info = []
+    for a, b in zip(values_a, values_b):
+        if a and a.startswith('!'):
+            employee_info.append(f"\n🏢 В городе: {a[1:]}{b}\n")
+        elif b and b != '':
+            a = WW_PLACES.get(a, a)
+            b = WW_PLACES.get(b, b)
+            employee_info.append(f"👤 {a}: {b}")
+
+    return employee_info
+
+@app.route('/who_work', methods=['GET'])
+def who_work():
+    day = request.args.get('day')
+    day_offset = 0 if day == 'today' else 1
+    day_text = 'Сегодня' if day_offset == 0 else 'Завтра'
+
+    employee_info = get_google_sheets_data(day_offset)
+    if employee_info:
+        text = f"{day_text} ({(datetime.now() + timedelta(days=day_offset)).strftime('%d.%m.%Y')}) работают:\n" + '\n'.join(employee_info)
+    else:
+        text = f"{day_text} ({(datetime.now() + timedelta(days=day_offset)).strftime('%d.%m.%Y')}) никто не работает"
+
+    return jsonify({'text': text})
+
+if __name__ == '__main__':
+    app.run(debug=True)
