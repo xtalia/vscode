@@ -152,9 +152,14 @@
             linkElement.addEventListener('mouseout', () => {
                 linkElement.style.backgroundColor = 'transparent';
             });
+    
+            // Открывать ссылки в новой вкладке
+            linkElement.target = '_blank';
+    
             linksContainer.appendChild(linkElement);
         });
     }
+    
 
     // Initial hide the panel
     hidePanel();
