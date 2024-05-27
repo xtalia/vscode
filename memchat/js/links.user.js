@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Полезные ссылки
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.0
 // @description  Выдвижная панель с полезными ссылками и кнопкой для показа/скрытия, а также обновления списка ссылок
 // @author       Your Name
 // @match        https://online.moysklad.ru/*
@@ -35,6 +35,28 @@
     });
     document.body.appendChild(showButton);
 
+    const closeButton = document.createElement('button');
+    closeButton.textContent = '❌ Скрыть';
+    closeButton.style.cssText = `
+        display: none;
+        position: fixed;
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+        background-color: #dc3545;
+        color: #fff;
+        border: none;
+        border-top-left-radius: 5px;
+        border-bottom-left-radius: 5px;
+        padding: 10px;
+        cursor: pointer;
+        z-index: 1000;
+    `;
+    closeButton.addEventListener('click', () => {
+        hidePanel();
+    });
+    document.body.appendChild(closeButton);
+
     const panel = document.createElement('div');
     panel.id = 'usefulLinksPanel';
     panel.style.cssText = `
@@ -51,21 +73,6 @@
         overflow-y: auto;
         padding: 10px;
     `;
-
-    const closeButton = document.createElement('button');
-    closeButton.textContent = '❌ Скрыть';
-    closeButton.style.cssText = `
-        background-color: #dc3545;
-        color: #fff;
-        border: none;
-        padding: 5px 10px;
-        cursor: pointer;
-        margin-bottom: 10px;
-    `;
-    closeButton.addEventListener('click', () => {
-        hidePanel();
-    });
-    panel.appendChild(closeButton);
 
     const refreshButton = document.createElement('button');
     refreshButton.textContent = '🔄 Обновить список';
@@ -94,12 +101,16 @@
     }
 
     function showPanel() {
+        showButton.style.display = 'none';
+        closeButton.style.display = 'block';
         panel.style.transform = 'translateX(0)';
         panelVisible = true;
         fetchLinks();
     }
 
     function hidePanel() {
+        showButton.style.display = 'block';
+        closeButton.style.display = 'none';
         panel.style.transform = `translateX(${panelWidth}px)`;
         panelVisible = false;
     }
