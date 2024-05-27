@@ -5,8 +5,7 @@
 // @description  Выдвижная панель с полезными ссылками и кнопкой для показа/скрытия, а также обновления списка ссылок
 // @author       Your Name
 // @match        https://online.moysklad.ru/*
-// @grant        GM_xmlhttpRequest
-// @grant        GM_addStyle
+// @grant        none
 // ==/UserScript==
 
 (function() {
@@ -106,23 +105,20 @@
     }
 
     function fetchLinks() {
-        GM_xmlhttpRequest({
-            method: 'GET',
-            url: 'https://raw.githubusercontent.com/xtalia/vscode/main/memchat/js/links.json',
-            onload: function(response) {
-                try {
-                    const linksData = JSON.parse(response.responseText);
-                    renderLinks(linksData);
-                } catch (error) {
-                    console.error('Failed to parse links JSON', error);
-                    alert('Не удалось загрузить список ссылок. Попробуйте еще раз.');
+        fetch('https://raw.githubusercontent.com/xtalia/vscode/main/memchat/js/links.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to load links');
                 }
-            },
-            onerror: function(error) {
-                console.error('Failed to load links JSON', error);
+                return response.json();
+            })
+            .then(linksData => {
+                renderLinks(linksData);
+            })
+            .catch(error => {
+                console.error('Failed to load links', error);
                 alert('Не удалось загрузить список ссылок. Попробуйте еще раз.');
-            }
-        });
+            });
     }
 
     function renderLinks(linksData) {
@@ -156,10 +152,12 @@
     document.body.appendChild(panel);
 
     // Add styles
-    GM_addStyle(`
+    const style = document.createElement('style');
+    style.textContent = `
         #usefulLinksPanel a:hover {
             background-color: #f0f0f0;
         }
-    `);
+    `;
+    document.head.appendChild(style);
 
 })();
