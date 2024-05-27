@@ -1,19 +1,18 @@
 // ==UserScript==
 // @name         Мемный чат
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description  Набор скриптов
 // @match        https://online.moysklad.ru/*
 // @grant        GM_xmlhttpRequest
-// @grant        GM_addStyle
 // ==/UserScript==
 
 (function() {
     'use strict';
 
     const scriptsToLoad = [
-        'https://github.com/xtalia/vscode/raw/main/memchat/js/price_calculator.js',
-        'https://github.com/xtalia/vscode/raw/main/memchat/js/ms_show_all.js'
+        'https://raw.githubusercontent.com/xtalia/vscode/main/memchat/js/ms_show_all.js',
+        'https://raw.githubusercontent.com/xtalia/vscode/main/memchat/js/price_calculator.js'
     ];
 
     scriptsToLoad.forEach(url => {
@@ -23,7 +22,7 @@
             onload: function(response) {
                 const script = document.createElement('script');
                 script.textContent = response.responseText;
-                document.head.appendChild(script);
+                document.body.appendChild(script);
             }
         });
     });
