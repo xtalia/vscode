@@ -106,13 +106,14 @@
                 const discountedPrice = originalPrice - discount;
                 const discountPercentage = 100 - (discountedPrice / (originalPrice * 0.01));
 
-                resultField.value = `
-Применена скидка:
-Изначальная цена: ${originalPrice} рублей
-Скидка: ${discount} рублей
-Процент скидки: ${discountPercentage} %
-Сумма со скидкой: ${discountedPrice} рублей
-                `.trim();
+    resultField.value = `
+🎉 Применена скидка:
+🔹 Изначальная цена: ${originalPrice} рублей
+🔹 Скидка: ${discount} рублей
+🔹 Процент скидки: ${discountPercentage} %
+🔹 Сумма со скидкой: ${discountedPrice} рублей
+    `.trim();
+
             } else {
                 resultField.value = 'Ошибка: Введите корректную сумму скидки (только цифры).';
             }
