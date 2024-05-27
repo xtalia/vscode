@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Script Loader with Settings Panel
 // @namespace    http://tampermonkey.net/
-// @version      1.5
+// @version      1.51
 // @description  Load scripts based on user settings
 // @match        https://online.moysklad.ru/*
 // @grant        none
@@ -85,7 +85,7 @@
 
     // Add event listener for toggling the settings panel with Ctrl+M
     document.addEventListener('keydown', (event) => {
-        if (event.ctrlKey && event.key === 'm') {
+        if (event.ctrlKey && event.key === ';') {
             toggleSettingsPanel();
         }
     });
