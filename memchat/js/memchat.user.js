@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         Мемный чат 4
+// @name         Мемный чат 1.6
 // @namespace    http://tampermonkey.net/
-// @version      1.6
+// @version      1.6.1
 // @description  Набор скриптов
 // @match        https://online.moysklad.ru/*
 // @grant        GM_xmlhttpRequest
@@ -64,13 +64,13 @@
     GM_registerMenuCommand('Show All Tab Contents', showAllTabContents, 'S');
 
     // Функция для создания контекстного меню
-    function createContextMenu() {
-        const contextMenu = document.createElement('div');
-        contextMenu.classList.add('gm-context-menu');
-        contextMenu.textContent = 'Show All Tab Contents';
-        contextMenu.addEventListener('click', showAllTabContents);
-        document.body.appendChild(contextMenu);
-    }
+ //   function createContextMenu() {
+ //       const contextMenu = document.createElement('div');
+ //       contextMenu.classList.add('gm-context-menu');
+ //       contextMenu.textContent = 'Show All Tab Contents';
+ //       contextMenu.addEventListener('click', showAllTabContents);
+ //       document.body.appendChild(contextMenu);
+ //   }
 
     // Запуск функции создания контекстного меню после полной загрузки страницы
     window.addEventListener('load', () => {
