@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Price Calculator
 // @namespace    https://github.com/xtalia/vscode/blob/main/memchat/js/price_calculator.js
-// @version      1.3
+// @version      1.4
 // @description  Добавляет окошко для расчета цен с возможностью сворачивания и вывода результатов в текстовое поле, а также с функцией для расчета скидки
 // @author       Serg
 // @match        https://online.moysklad.ru/*
@@ -19,7 +19,7 @@
         header.style.cssText = 'display: flex; justify-content: space-between; align-items: center;';
 
         const title = document.createElement('span');
-        title.textContent = 'Калькулятор 1.3';
+        title.textContent = 'Калькулятор 1.4';
         header.appendChild(title);
 
         const toggleButton = document.createElement('button');
@@ -103,8 +103,7 @@
                 const discountedPrice = originalPrice - discount;
                 const discountPercentage = 100 - (discountedPrice / (originalPrice * 0.01));
 
-                resultField.value += `
-            
+                resultField.value = `
 Применена скидка:
 Изначальная цена: ${originalPrice} рублей
 Скидка: ${discount} рублей
