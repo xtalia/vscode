@@ -61,7 +61,7 @@
     `);
 
     // Регистрация пункта в контекстном меню
-    GM_registerMenuCommand('Show All Tab Contents', showAllTabContents, 'S');
+    GM_registerMenuCommand('Раскрыть всю карточку товара', showAllTabContents, 'S');
 
     // Функция для создания контекстного меню
  //   function createContextMenu() {
