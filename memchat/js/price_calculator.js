@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Price Calculator
 // @namespace    https://github.com/xtalia/vscode/blob/main/memchat/js/price_calculator.js
-// @version      1.4
+// @version      1.5
 // @description  Добавляет окошко для расчета цен с возможностью сворачивания и вывода результатов в текстовое поле, а также с функцией для расчета скидки
 // @author       Serg
 // @match        https://online.moysklad.ru/*
@@ -19,7 +19,7 @@
         header.style.cssText = 'display: flex; justify-content: space-between; align-items: center;';
 
         const title = document.createElement('span');
-        title.textContent = 'Калькулятор 1.4';
+        title.textContent = 'Калькулятор 1.5';
         header.appendChild(title);
 
         const toggleButton = document.createElement('button');
@@ -51,8 +51,11 @@
         const resultField = createTextAreaElement('', 100);
         content.appendChild(resultField);
 
-        const discountButton = createButtonElement('Применить скидку', () => applyDiscount());
-        content.appendChild(discountButton);
+        const discountInput = createInputElement('number', 'Введите сумму скидки');
+        content.appendChild(discountInput);
+
+        const applyDiscountButton = createButtonElement('Применить скидку', () => applyDiscount());
+        content.appendChild(applyDiscountButton);
 
         function calculate() {
             const cash = parseFloat(cashInput.value);
@@ -97,7 +100,7 @@
 
         function applyDiscount() {
             const originalPrice = parseFloat(cashInput.value);
-            const discount = parseFloat(prompt('Введите сумму скидки:', ''));
+            const discount = parseFloat(discountInput.value);
             
             if (!isNaN(discount)) {
                 const discountedPrice = originalPrice - discount;
@@ -111,7 +114,7 @@
 Сумма со скидкой: ${discountedPrice} рублей
                 `.trim();
             } else {
-                alert('Введите корректную сумму скидки (только цифры).');
+                resultField.value = 'Ошибка: Введите корректную сумму скидки (только цифры).';
             }
         }
 
