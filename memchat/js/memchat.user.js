@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Мемный чат 4
-// @namespace    http://tampermonkey.net/
+// @namespace    https://github.com/xtalia/vscode/tree/main/memchat/js
 // @version      1.4
 // @description  Набор скриптов
 // @match        https://online.moysklad.ru/*
