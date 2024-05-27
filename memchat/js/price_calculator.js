@@ -19,7 +19,7 @@ function createCalculator() {
     header.style.alignItems = 'center';
 
     const title = document.createElement('span');
-    title.innerText = 'Calculator';
+    title.innerText = 'Калькулятор';
     header.appendChild(title);
 
     const toggleButton = document.createElement('button');
@@ -44,7 +44,7 @@ function createCalculator() {
 
     const cashInput = document.createElement('input');
     cashInput.type = 'number';
-    cashInput.placeholder = 'Enter cash amount';
+    cashInput.placeholder = 'Введите сумму';
     cashInput.style.width = '100%';
     cashInput.style.marginBottom = '10px';
     content.appendChild(cashInput);
