@@ -16,22 +16,23 @@
         container.style.cssText = 'position: fixed; bottom: 10px; right: 10px; width: 250px; background: linear-gradient(to bottom right, #f0f0f0, #e0e0e0); border: 1px solid #ccc; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); padding: 15px; z-index: 1000;';
 
         const header = document.createElement('div');
-        header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;';
+        header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; cursor: pointer;';
 
         const title = document.createElement('span');
-        title.textContent = 'Калькулятор 1.5.3';
+        title.textContent = '🧮 Калькулятор 1.5.1';
         title.style.fontWeight = 'bold';
         title.style.fontSize = '14px';
         header.appendChild(title);
 
-        const toggleButton = document.createElement('button');
+        const toggleButton = document.createElement('span');
         toggleButton.textContent = '▲';
-        toggleButton.style.cssText = 'background-color: transparent; border: none; cursor: pointer; font-size: 14px;';
-        toggleButton.addEventListener('click', () => {
-            content.style.display = content.style.display === 'none' ? 'block' : 'none';
-            toggleButton.textContent = content.style.display === 'none' ? '▲' : '▼';
-        });
+        toggleButton.style.cssText = 'font-size: 14px;';
         header.appendChild(toggleButton);
+
+        header.addEventListener('click', () => {
+            content.style.display = content.style.display === 'none' ? 'block' : 'none';
+            toggleButton.textContent = content.style.display === 'none' ? '▼' : '▲';
+        });
 
         container.appendChild(header);
 
