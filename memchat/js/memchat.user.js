@@ -6,6 +6,7 @@
 // @match        https://online.moysklad.ru/*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_registerMenuCommand
+// @grant        GM_addStyle
 // ==/UserScript==
 
 (function() {
