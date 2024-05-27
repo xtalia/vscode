@@ -29,7 +29,7 @@
         toggleButton.style.cssText = 'background-color: transparent; border: none; cursor: pointer; font-size: 18px;';
         toggleButton.addEventListener('click', () => {
             content.style.display = content.style.display === 'none' ? 'block' : 'none';
-            toggleButton.textContent = content.style.display === 'none' ? '+' : '-';
+            toggleButton.textContent = content.style.display === 'none' ? '▼' : '▲';
         });
         header.appendChild(toggleButton);
 
