@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Мемный чат
 // @namespace    http://tampermonkey.net/
-// @version      1.6.2
+// @version      1.6.3
 // @description  Набор скриптов
 // @match        https://online.moysklad.ru/*
 // @grant        GM_xmlhttpRequest
@@ -19,8 +19,8 @@
         'https://raw.githubusercontent.com/xtalia/vscode/main/memchat/js/links.user.js'
     ];
 
-    function loadScripts() {
-        scriptsToLoad.forEach(url => {
+    function loadScript(url) {
+        return new Promise((resolve, reject) => {
             GM_xmlhttpRequest({
                 method: 'GET',
                 url: url,
@@ -29,15 +29,25 @@
                     const script = document.createElement('script');
                     script.textContent = response.responseText;
                     document.body.appendChild(script);
+                    resolve();
                 },
                 onerror: function(error) {
                     console.error(`Failed to load script from ${url}`, error);
+                    reject(error);
                 }
             });
         });
     }
 
-    // Функция для показа всех блоков с class="tab-content"
+    async function loadAllScripts() {
+        try {
+            await Promise.all(scriptsToLoad.map(loadScript));
+            console.log('All scripts loaded successfully');
+        } catch (error) {
+            console.error('Error loading scripts:', error);
+        }
+    }
+
     function showAllTabContents() {
         const hiddenElements = document.querySelectorAll('.tab-content .hidden');
         hiddenElements.forEach(element => {
@@ -45,46 +55,52 @@
         });
     }
 
-    // Добавление стилей для контекстного меню
-    GM_addStyle(`
-        .gm-context-menu {
-            z-index: 1000;
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background-color: #f9f9f9;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            padding: 10px;
-            cursor: pointer;
-        }
-    `);
+    function addCustomStyles() {
+        GM_addStyle(`
+            .gm-context-menu {
+                z-index: 1000;
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                background-color: #f9f9f9;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                padding: 10px;
+                cursor: pointer;
+            }
+        `);
+    }
 
-    // Регистрация пункта в контекстном меню
-    GM_registerMenuCommand('Раскрыть всю карточку товара', showAllTabContents, 'S');
+    function registerMenuCommands() {
+        GM_registerMenuCommand('Раскрыть всю карточку товара', showAllTabContents, 'S');
+        GM_registerMenuCommand('Обновить скрипты мемные', function() {
+            console.log('Reloading memchat scripts...');
+            loadAllScripts();
+        });
+    }
 
-    // Функция для создания контекстного меню
- //   function createContextMenu() {
- //       const contextMenu = document.createElement('div');
- //       contextMenu.classList.add('gm-context-menu');
- //       contextMenu.textContent = 'Show All Tab Contents';
- //       contextMenu.addEventListener('click', showAllTabContents);
- //       document.body.appendChild(contextMenu);
- //   }
+    function createContextMenu() {
+        const contextMenu = document.createElement('div');
+        contextMenu.classList.add('gm-context-menu');
+        contextMenu.textContent = 'Show All Tab Contents';
+        contextMenu.addEventListener('click', showAllTabContents);
+        document.body.appendChild(contextMenu);
+    }
 
-    // Запуск функции создания контекстного меню после полной загрузки страницы
-    window.addEventListener('load', () => {
-        setTimeout(createContextMenu, 3000); // Задержка в 3 секунды перед созданием контекстного меню
-    });
+    function initialize() {
+        addCustomStyles();
+        registerMenuCommands();
+        loadAllScripts();
+        window.addEventListener('load', () => {
+            setTimeout(createContextMenu, 3000);
+        });
+    }
 
-    // Register menu command to reload scripts
-    GM_registerMenuCommand('Обновить скрипты мемные', function() {
-        console.log('Reloading memchat scripts...');
-        loadScripts();
-    });
+    // Call the initialize function to set up the script
+    initialize();
 
-    // Initial load of scripts
-    loadScripts();
+    // Placeholder for additional functions
+    // Add new functions below this line
 
 })();
