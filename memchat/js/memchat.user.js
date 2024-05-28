@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Мемный чат
 // @namespace    http://tampermonkey.net/
-// @version      1.6.4
+// @version      1.6.5
 // @description  Набор скриптов
 // @match        https://online.moysklad.ru/*
 // @grant        GM_xmlhttpRequest
@@ -84,7 +84,6 @@
         addCustomStyles();
         registerMenuCommands();
         loadAllScripts();
-        });
     }
 
     // Call the initialize function to set up the script
