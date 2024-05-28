@@ -80,20 +80,10 @@
         });
     }
 
-    function createContextMenu() {
-        const contextMenu = document.createElement('div');
-        contextMenu.classList.add('gm-context-menu');
-        contextMenu.textContent = 'Show All Tab Contents';
-        contextMenu.addEventListener('click', showAllTabContents);
-        document.body.appendChild(contextMenu);
-    }
-
     function initialize() {
         addCustomStyles();
         registerMenuCommands();
         loadAllScripts();
-        window.addEventListener('load', () => {
-            setTimeout(createContextMenu, 3000);
         });
     }
 
