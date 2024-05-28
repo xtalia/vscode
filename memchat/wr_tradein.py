@@ -30,7 +30,7 @@ def calculate_ideal_price(model, memory, battery_capacity, package, back_cover, 
 
     if package in ["Только устройство", "only_phone"]:
         ideal_price += int(params["device_only"])
-    elif package in ["Устройство + коробка", "phone+box"]:
+    elif package in ["Устройство + коробка", "phone_box"]:
         ideal_price += int(params["device_box"])
 
     if back_cover:
@@ -52,7 +52,10 @@ def calculate_ideal_price(model, memory, battery_capacity, package, back_cover, 
 
     return ideal_price
 
-def load_data():
+def load_data(force=False):
+    if force:
+        tradeinloader.load()
+        return {"message": "load complete"}
     try:
         with open(os.path.join(cf.dir_path, 'data.json'), 'r') as f:
             data = json.load(f)
@@ -62,6 +65,7 @@ def load_data():
         return None
     except Exception as e:
         print(f"Error loading data: {e}")
+        tradeinloader.load()
         return None
 
 # Эта функция уже не будет содержать Streamlit-специфичного кода

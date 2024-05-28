@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from who_work import get_employee_info
-from wr_tradein import calculate_ideal_price
+from wr_tradein import calculate_ideal_price, load_data
 from flask_cors import CORS
 from urllib.parse import unquote
 
@@ -15,13 +15,13 @@ def who_work():
 
 @app.route('/tradein', methods=['GET'])
 def tradein():
-    # Извлекаем параметры из запроса и декодируем пробелы
+    # Извлекаем и декодируем параметры из запроса
     model = unquote(request.args.get('model', ''))
     memory = unquote(request.args.get('memory', ''))
     battery_capacity = int(request.args.get('battery_capacity', 0))
     package = unquote(request.args.get('package', ''))
-    back_cover = request.args.get('back_cover', type=bool, default=False)
-    screen = request.args.get('screen', type=bool, default=False)
+    back_cover = request.args.get('back_cover', type=lambda v: v.lower() == 'true', default=False)
+    screen = request.args.get('screen', type=lambda v: v.lower() == 'true', default=False)
     condition = unquote(request.args.get('condition', ''))
 
     # Вызываем функцию для расчета идеальной цены
@@ -37,6 +37,15 @@ def tradein():
 
     # Возвращаем JSON-ответ с идеальной ценой
     return jsonify({'ideal_price': ideal_price})
-    
+
+@app.route('/load_tn', methods=['GET'])
+def load_tn():
+    if request.args.get('force', type=lambda v: v.lower() == 'true', default=False):
+        data = load_data(force=True)
+        return jsonify(data)
+    else:
+        data = load_data()
+        return jsonify(data)
+
 if __name__ == '__main__':
     app.run(debug=True)
