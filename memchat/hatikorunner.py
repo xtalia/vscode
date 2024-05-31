@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, app
+from flask import Flask, request, jsonify
 from who_work import get_employee_info
 from wr_tradein import calculate_ideal_price, load_data
 from postgresloader import update_cache, handle_query, send_data
@@ -65,6 +65,4 @@ def memchat():
 
 
 if __name__ == '__main__':
-    from waitress import serve
-    server = app.run(port=5001,debug=False)
-    serve(server, port=5000)
+    app.run(port=5001,debug=False)
