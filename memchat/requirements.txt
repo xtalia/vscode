@@ -11,3 +11,4 @@ streamlit
 Flask
 FLask-CORS
 psycopg2
+waitress
