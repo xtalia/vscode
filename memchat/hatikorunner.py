@@ -46,6 +46,10 @@ def load_tn():
     else:
         data = load_data()
         return jsonify(data)
+    
+@app.route('/get', methods=['GET'])
+def kek():
+    pass
 
 if __name__ == '__main__':
     app.run(debug=True)

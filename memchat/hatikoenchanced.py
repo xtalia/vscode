@@ -326,6 +326,6 @@ def send_data(bot, message):
     message_text += f"🪙🗿 {data[3][1]}\n\n" # цена для Bal
     message_text += f"🌐🆂: {data[0][2]}\n" # ссылка для Саратова
     message_text += f"🌐🆅: {data[1][2]}\n" # ссылка для Воронежа
-    message_text += f"🌐🅻: {data[2][2]}" # ссылка для Липецка
+    message_text += f"🌐🅻: {data[2][2]}\n" # ссылка для Липецка
     message_text += f"🌐🗿: {data[3][2]}" # ссылка для Bal
     bot.send_message(message.chat.id, message_text) # отправляем сообщение пользователю
