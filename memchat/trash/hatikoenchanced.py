@@ -1,19 +1,69 @@
+import requests
+from bs4 import BeautifulSoup
+import config
 
-import gspread
-from gspread import Cell
-from oauth2client.service_account import ServiceAccountCredentials
+def search_items(bot, search_query):
+    pass
+
+def send_data(message, bot=None):
+    search_query = message.text # получаем текст сообщения от пользователя
+    for word in config.SITE_TRIGGERS: # для каждого слова в словаре
+        search_query = search_query.replace (word, "")
+    
+    base_urls = [ # список базовых url для трех городов
+    "https://hatiko.ru",
+    "https://voronezh.hatiko.ru",
+    "https://lipetsk.hatiko.ru",
+    "https://balakovo.hatiko.ru"
+]
+    urls = [ # список url для трех городов
+        f"https://hatiko.ru/search/?query={search_query}",
+        f"https://voronezh.hatiko.ru/search/?query={search_query}",
+        f"https://lipetsk.hatiko.ru/search/?query={search_query}",
+        f"https://balakovo.hatiko.ru/search/?query={search_query}"
+    ]
+    data = [] # список для хранения данных
+    for url in urls: # для каждого url
+        response = requests.get(url) # делаем запрос
+        soup = BeautifulSoup(response.text, "html.parser") # парсим html
+        product = soup.find("a", class_="s-product-header") # находим элемент с заголовком и ссылкой
+        if product: # если такой элемент есть
+            title = product["title"] # получаем заголовок
+            link = product["href"] # получаем ссылку
+            price = soup.find("span", class_="price").text.replace(" ", "") # находим элемент с ценой и убираем пробел
+            data.append((title, price, link)) # добавляем кортеж с данными в список
+        else: # если такого элемента нет
+            data.append(("Нет данных", "Нет данных", "Нет данных")) # добавляем кортеж с пустыми данными в список
+    # формируем сообщение с данными
+    for i in range(len(data)): # для каждого элемента в списке данных
+        data[i] = (data[i][0], data[i][1], base_urls[i] + data[i][2]) # заменяем относительный url на абсолютный url, соединяя базовый url с относительным url
+    message_text = f"🧭 {data[0][0]}\n" # заголовок одинаковый для всех городов, берем первый элемент
+    message_text += f"🪙🆂 {data[0][1]}\n" # цена для Саратова
+    message_text += f"🪙🆅 {data[1][1]}\n" # цена для Воронежа
+    message_text += f"🪙🅻 {data[2][1]}\n" # цена для Липецка
+    message_text += f"🪙🗿 {data[3][1]}\n\n" # цена для Bal
+    message_text += f"🌐🆂: {data[0][2]}\n" # ссылка для Саратова
+    message_text += f"🌐🆅: {data[1][2]}\n" # ссылка для Воронежа
+    message_text += f"🌐🅻: {data[2][2]}\n" # ссылка для Липецка
+    message_text += f"🌐🗿: {data[3][2]}" # ссылка для Bal
+    if bot == None:
+        return message_text
+    bot.send_message(message.chat.id, message_text) # отправляем сообщение пользователю
+    
+'''
+старый код
+
+
+from tqdm import tqdm
+
 import os
 import sys
 import pickle
 import datetime
-import requests
-from bs4 import BeautifulSoup
-import config
-from tqdm import tqdm
-
-
-
 cred_json = config.cred_json
+import gspread
+from gspread import Cell
+from oauth2client.service_account import ServiceAccountCredentials
 
 # Аутентификация и открытие таблицы
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive',
@@ -262,70 +312,28 @@ def compare_prices(item_info, search_query):
     return message
 
 def search_items(bot, search_query, search_type, chat_id) -> str:
-    bot.send_message(chat_id, "Начинаем поиск")
-    count = 0
-    try:
-        for item_id, item_info in final_dict.items():
-            if search_type == "vendor_code":
-                if search_query == item_info["vendor_code"]:
-                    count += 1
-                    result = print_item_info(item_id, item_info)
-                    bot.send_message(chat_id, result)
-            elif search_type == "item_name":
-                if search_query.lower() in item_info["item_name"].lower():
-                    count += 1
-                    result = print_item_info(item_id, item_info)
-                    bot.send_message(chat_id, result)
+            bot.send_message(chat_id, "Начинаем поиск")
+            count = 0
+            try:
+                for item_id, item_info in final_dict.items():
+                    if search_type == "vendor_code":
+                        if search_query == item_info["vendor_code"]:
+                            count += 1
+                            result = print_item_info(item_id, item_info)
+                            bot.send_message(chat_id, result)
+                    elif search_type == "item_name":
+                        if search_query.lower() in item_info["item_name"].lower():
+                            count += 1
+                            result = print_item_info(item_id, item_info)
+                            bot.send_message(chat_id, result)
 
-            if count == 15:
-                break
+                    if count == 15:
+                        break
 
-        if count < 15:
-            return "Готово"
-        else:
-            return "Уменьши размер поиска или используй артикул"
-    except Exception as e:
-        return None
-# Если нужно из сайта цифры узнать
-def send_data(bot, message):
-    search_query = message.text # получаем текст сообщения от пользователя
-    for word in config.SITE_TRIGGERS: # для каждого слова в словаре
-        search_query = search_query.replace (word, "")
-    
-    base_urls = [ # список базовых url для трех городов
-    "https://hatiko.ru",
-    "https://voronezh.hatiko.ru",
-    "https://lipetsk.hatiko.ru",
-    "https://balakovo.hatiko.ru"
-]
-    urls = [ # список url для трех городов
-        f"https://hatiko.ru/search/?query={search_query}",
-        f"https://voronezh.hatiko.ru/search/?query={search_query}",
-        f"https://lipetsk.hatiko.ru/search/?query={search_query}",
-        f"https://balakovo.hatiko.ru/search/?query={search_query}"
-    ]
-    data = [] # список для хранения данных
-    for url in urls: # для каждого url
-        response = requests.get(url) # делаем запрос
-        soup = BeautifulSoup(response.text, "html.parser") # парсим html
-        product = soup.find("a", class_="s-product-header") # находим элемент с заголовком и ссылкой
-        if product: # если такой элемент есть
-            title = product["title"] # получаем заголовок
-            link = product["href"] # получаем ссылку
-            price = soup.find("span", class_="price").text.replace(" ", "") # находим элемент с ценой и убираем пробел
-            data.append((title, price, link)) # добавляем кортеж с данными в список
-        else: # если такого элемента нет
-            data.append(("Нет данных", "Нет данных", "Нет данных")) # добавляем кортеж с пустыми данными в список
-    # формируем сообщение с данными
-    for i in range(len(data)): # для каждого элемента в списке данных
-        data[i] = (data[i][0], data[i][1], base_urls[i] + data[i][2]) # заменяем относительный url на абсолютный url, соединяя базовый url с относительным url
-    message_text = f"🧭 {data[0][0]}\n" # заголовок одинаковый для всех городов, берем первый элемент
-    message_text += f"🪙🆂 {data[0][1]}\n" # цена для Саратова
-    message_text += f"🪙🆅 {data[1][1]}\n" # цена для Воронежа
-    message_text += f"🪙🅻 {data[2][1]}\n" # цена для Липецка
-    message_text += f"🪙🗿 {data[3][1]}\n\n" # цена для Bal
-    message_text += f"🌐🆂: {data[0][2]}\n" # ссылка для Саратова
-    message_text += f"🌐🆅: {data[1][2]}\n" # ссылка для Воронежа
-    message_text += f"🌐🅻: {data[2][2]}\n" # ссылка для Липецка
-    message_text += f"🌐🗿: {data[3][2]}" # ссылка для Bal
-    bot.send_message(message.chat.id, message_text) # отправляем сообщение пользователю
+                if count < 15:
+                    return "Готово"
+                else:
+                    return "Уменьши размер поиска или используй артикул"
+            except Exception as e:
+                return None
+'''

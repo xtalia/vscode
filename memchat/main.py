@@ -20,8 +20,7 @@ from usd_rate import handle_usd_rate
 import genpdf
 from phone_classifier import process_model_input 
 if config.cred_json != "":
-    
-    from hatikoenchanced import search_items, send_data #, priceup
+    from postgresloader import update_cache, handle_query, send_data 
 
 
 directory = os.path.dirname(os.path.abspath(__file__))
@@ -216,25 +215,27 @@ def handle_config_file(message):
 #### Если текст не соответствует ни одному варианту, то запускается основной скрипт
 @bot.message_handler(content_types=['text'])
 def handle_message(message):
+    chat_id = message.chat.id
     if any(trigger.lower() in message.text.lower() for trigger in config.SITE_TRIGGERS):
-        send_data(bot,message)
+        bot.send_message(chat_id, "Ищу информацию на сайте Хатико")
+        result = send_data(message)
+        bot.send_message(chat_id, result)
         return
            
     if str(message.from_user.id) in config.GRANTED:
         search_query = message.text
-        chat_id = message.chat.id
-
-        if search_query.isdigit():
-            result = search_items(bot, search_query, "vendor_code", chat_id)
-        else:
-            result = search_items(bot, search_query, "item_name", chat_id)
-
+        result = handle_query(search_query)
+        
         if result:
-            bot.send_message(chat_id, result)
+            parts = result.split("Отдаем? Сможете привезти?")
+            
+            for part in parts:
+                if part.strip():  # Убедимся, что часть не пустая
+                    bot.send_message(chat_id, part.strip() + "\nОтдаем? Сможете привезти?")
         else:
-            bot.send_message(chat_id, "Ничего не найдено")        
+            bot.send_message(chat_id, "Ошибка")
     else:    
-        bot.send_message(message.chat.id, f"В доступе отказано. Сообщите ваш ID {message.from_user.id} Сергею, чтобы он вас добавил")
+        bot.send_message(chat_id, f"В доступе отказано. Сообщите ваш ID {message.from_user.id} Сергею, чтобы он вас добавил")
 
 if __name__ == '__main__':
     

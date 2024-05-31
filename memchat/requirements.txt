@@ -10,3 +10,4 @@ num2words
 streamlit
 Flask
 FLask-CORS
+psycopg2

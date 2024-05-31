@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from who_work import get_employee_info
 from wr_tradein import calculate_ideal_price, load_data
+from postgresloader import update_cache, handle_query, send_data
 from flask_cors import CORS
 from urllib.parse import unquote
 
@@ -47,9 +48,21 @@ def load_tn():
         data = load_data()
         return jsonify(data)
     
-@app.route('/get', methods=['GET'])
-def kek():
-    pass
+@app.route('/memchat', methods=['GET'])
+def memchat():
+    if request.args.get('force', type=lambda v: v.lower() == 'true', default=False):
+        update_cache(force=True)
+        return jsonify("memchat cache update complete")
+    elif request.args.get('hatiko', ''):
+        
+        pass
+        
+    
+    
+    query = unquote(request.args.get('query', ''))
+    answer = handle_query(query)
+    return answer
+
 
 if __name__ == '__main__':
     app.run(debug=True)
